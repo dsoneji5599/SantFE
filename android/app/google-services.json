@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "362404631572",
+    "project_id": "sant-app-f9d25",
+    "storage_bucket": "sant-app-f9d25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362404631572:android:14f6f1583b12635fa7c301",
+        "android_client_info": {
+          "package_name": "com.app.sant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "362404631572-blu57hjbg965rd2mn4hco0fkthcmndcj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.app.sant",
+            "certificate_hash": "863d0ac3406cd7a9715efd4da0209d9fab5f27c7"
+          }
+        },
+        {
+          "client_id": "362404631572-tfebmarei7i3vu46gdrqk41kdp5rnr8f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.app.sant",
+            "certificate_hash": "475fdd59851be53743a1fd86c0623b7709e91d34"
+          }
+        },
+        {
+          "client_id": "362404631572-ecjshrf85cv26ih1dbs5mo6s6a894fb3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJPUh14-WnZYLF3Vrl4TyNZpOesO8pqJE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "362404631572-ecjshrf85cv26ih1dbs5mo6s6a894fb3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "362404631572-09ovpqe5teqt27iq43igc3fs3ctkfqu5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.santApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
