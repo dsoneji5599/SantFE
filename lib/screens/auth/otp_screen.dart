@@ -9,7 +9,6 @@ import 'package:sant_app/provider/auth_provider.dart';
 
 import 'package:sant_app/repositories/firebase_api.dart';
 import 'package:sant_app/screens/auth/register_user_screen.dart';
-import 'package:sant_app/screens/auth/wait_for_sant.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/utils/toast_bar.dart';
@@ -296,6 +295,10 @@ class _OtpScreenState extends State<OtpScreen> {
                               phoneNumber: user.user?.phoneNumber ?? '',
                               firebaseUid: user.user?.uid ?? '',
                             );
+                        MySharedPreferences.instance.setBooleanValue(
+                          "isUser",
+                          widget.isUser,
+                        );
                       } else {
                         loginSuccess = await context
                             .read<AuthProvider>()
@@ -303,15 +306,25 @@ class _OtpScreenState extends State<OtpScreen> {
                               phoneNumber: user.user?.phoneNumber ?? '',
                               firebaseUid: user.user?.uid ?? '',
                             );
+                        MySharedPreferences.instance.setBooleanValue(
+                          "isUser",
+                          widget.isUser,
+                        );
                       }
 
                       if (loaderCtx != null) Navigator.pop(loaderCtx!);
 
                       if (loginSuccess) {
                         if (widget.isUser) {
-                          navigatorPushReplacement(context, App());
+                          navigatorPushReplacement(
+                            context,
+                            App(isUser: widget.isUser),
+                          );
                         } else {
-                          navigatorPushReplacement(context, WaitForSant());
+                          navigatorPushReplacement(
+                            context,
+                            App(isUser: widget.isUser),
+                          );
                         }
                       } else {
                         navigatorPush(

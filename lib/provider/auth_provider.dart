@@ -149,7 +149,6 @@ class AuthProvider extends ChangeNotifier {
       final statusCode = int.tryParse(response['status_code'].toString());
 
       if (statusCode == 200) {
-        userId = response["data"]["user_id"];
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
 
@@ -186,7 +185,6 @@ class AuthProvider extends ChangeNotifier {
       final statusCode = int.tryParse(response['status_code'].toString());
 
       if (statusCode == 201) {
-        userId = response["data"]["user_id"];
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
 

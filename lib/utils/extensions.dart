@@ -7,6 +7,10 @@ extension DateTimeHelper on DateTime {
     return '$day/${month < 10 ? '0$month' : month}/$year';
   }
 
+  String toDDMMYYYYDash() {
+    return '$day-${month < 10 ? '0$month' : month}-$year';
+  }
+
   String toStandard() {
     return '${day.th()} ${month.intToMonth()}, $year';
   }
@@ -83,8 +87,9 @@ extension IntHelper on int {
 extension StringHelper on String {
   String abbriviate([int limit = 10]) {
     if (length <= limit) return this;
-    final list =
-        split(' ').map((e) => e.substring(0, 1).toUpperCase()).toList();
+    final list = split(
+      ' ',
+    ).map((e) => e.substring(0, 1).toUpperCase()).toList();
     return list.join();
   }
 

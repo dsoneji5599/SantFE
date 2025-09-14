@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sant_app/provider/profile_provider.dart';
 import 'package:sant_app/repositories/firebase_api.dart';
 import 'package:sant_app/screens/auth/onboarding_screen.dart';
-import 'package:sant_app/screens/home/event_screen.dart';
+import 'package:sant_app/screens/drawer/event_screen.dart';
 import 'package:sant_app/screens/home/home_screen.dart';
 import 'package:sant_app/screens/home/my_family_screen.dart';
 import 'package:sant_app/screens/home/user_profile_screen.dart';
@@ -19,7 +19,8 @@ import 'package:sant_app/widgets/keys.dart';
 
 class App extends StatefulWidget {
   final int myIndex;
-  const App({super.key, this.myIndex = 0});
+  final bool? isUser;
+  const App({super.key, this.myIndex = 0, required this.isUser});
 
   @override
   State<App> createState() => _AppState();
@@ -36,7 +37,9 @@ class _AppState extends State<App> {
     super.initState();
 
     profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
-    profileProvider.getProfile();
+    widget.isUser == true
+        ? profileProvider.getProfile()
+        : profileProvider.getSantProfile();
 
     myIndex = widget.myIndex;
     _pageController = PageController(initialPage: myIndex);
@@ -63,7 +66,7 @@ class _AppState extends State<App> {
       const SearchScreen(),
       const TempleScreen(),
       const SavedScreen(),
-      const MyFamilyScreen(),
+      if (widget.isUser == true) const MyFamilyScreen(),
       const UserProfileScreen(),
     ];
 
@@ -261,11 +264,12 @@ class _AppState extends State<App> {
                 label: "Saved",
                 activeIcon: Icon(Icons.bookmark_outline),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.people_outline),
-                label: "My Family",
-                activeIcon: Icon(Icons.people_outline),
-              ),
+              if (widget.isUser == true)
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.people_outline),
+                  label: "My Family",
+                  activeIcon: Icon(Icons.people_outline),
+                ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),
                 label: "Profile",

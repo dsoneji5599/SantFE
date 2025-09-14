@@ -50,5 +50,12 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to select photos.</string>
 
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to display maps and provide location-based services.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location in the background for location-based services.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location in the always and when in use for location-based services.</string>
+
 </dict>
 </plist>

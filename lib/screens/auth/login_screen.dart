@@ -8,10 +8,10 @@ import 'package:sant_app/provider/auth_provider.dart';
 import 'package:sant_app/repositories/firebase_api.dart';
 import 'package:sant_app/screens/auth/phone_screen.dart';
 import 'package:sant_app/screens/auth/register_user_screen.dart';
-import 'package:sant_app/screens/auth/wait_for_sant.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
+import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
@@ -128,25 +128,46 @@ class _LoginScreenState extends State<LoginScreen> {
                           return;
                         }
 
-                        final isNewUser = !(await context
-                            .read<AuthProvider>()
-                            .checkUserExist(email: value.user?.email));
-
                         Navigator.pop(loaderCTX0!);
 
-                        if (isNewUser) {
-                          navigatorPush(
-                            context,
-                            RegisterUserScreen(
-                              firebaseUid: value.user?.uid ?? '',
-                              email: value.user?.email ?? '',
-                              isUser: widget.isUser,
-                              isFromPhone: false,
-                            ),
-                          );
-                          return;
+                        if (widget.isUser) {
+                          final isNewUser = !(await context
+                              .read<AuthProvider>()
+                              .checkUserExist(email: value.user?.email));
+
+                          if (isNewUser) {
+                            navigatorPush(
+                              context,
+                              RegisterUserScreen(
+                                firebaseUid: value.user?.uid ?? '',
+                                email: value.user?.email ?? '',
+                                isUser: widget.isUser,
+                                isFromPhone: false,
+                              ),
+                            );
+                            return;
+                          } else {
+                            toastMessage("This User Is Already Exist");
+                          }
                         } else {
-                          toastMessage("This User Is Already Exist");
+                          final isNewSant = !(await context
+                              .read<AuthProvider>()
+                              .checkSantExist(email: value.user?.email));
+
+                          if (isNewSant) {
+                            navigatorPush(
+                              context,
+                              RegisterUserScreen(
+                                firebaseUid: value.user?.uid ?? '',
+                                email: value.user?.email ?? '',
+                                isUser: widget.isUser,
+                                isFromPhone: false,
+                              ),
+                            );
+                            return;
+                          } else {
+                            toastMessage("This Sant Is Already Exist");
+                          }
                         }
 
                         // Existing user login attempt
@@ -159,22 +180,36 @@ class _LoginScreenState extends State<LoginScreen> {
                                 email: value.user?.email ?? '',
                                 firebaseUid: value.user?.uid ?? '',
                               );
+                          MySharedPreferences.instance.setBooleanValue(
+                            "isUser",
+                            widget.isUser,
+                          );
                         } else {
                           loginSuccess = await context
                               .read<AuthProvider>()
                               .santLogin(
-                                phoneNumber: value.user?.email ?? '',
+                                email: value.user?.email ?? '',
                                 firebaseUid: value.user?.uid ?? '',
                               );
+                          MySharedPreferences.instance.setBooleanValue(
+                            "isUser",
+                            widget.isUser,
+                          );
                         }
 
                         // if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
 
                         if (loginSuccess) {
                           if (widget.isUser) {
-                            navigatorPushReplacement(context, App());
+                            navigatorPushReplacement(
+                              context,
+                              App(isUser: widget.isUser),
+                            );
                           } else {
-                            navigatorPushReplacement(context, WaitForSant());
+                            navigatorPushReplacement(
+                              context,
+                              App(isUser: widget.isUser),
+                            );
                           }
                         } else {
                           toastMessage('Login failed. Please try again.');
@@ -268,6 +303,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   phoneNumber: value.user?.email ?? '',
                                   firebaseUid: value.user?.uid ?? '',
                                 );
+                            MySharedPreferences.instance.setBooleanValue(
+                              "isUser",
+                              widget.isUser,
+                            );
                           } else {
                             loginSuccess = await context
                                 .read<AuthProvider>()
@@ -275,15 +314,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                   phoneNumber: value.user?.email ?? '',
                                   firebaseUid: value.user?.uid ?? '',
                                 );
+                            MySharedPreferences.instance.setBooleanValue(
+                              "isUser",
+                              widget.isUser,
+                            );
                           }
 
                           if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
 
                           if (loginSuccess) {
                             if (widget.isUser) {
-                              navigatorPushReplacement(context, App());
+                              navigatorPushReplacement(
+                                context,
+                                App(isUser: widget.isUser),
+                              );
                             } else {
-                              navigatorPushReplacement(context, WaitForSant());
+                              navigatorPushReplacement(
+                                context,
+                                App(isUser: widget.isUser),
+                              );
                             }
                           } else {
                             toastMessage('Login failed. Please try again.');

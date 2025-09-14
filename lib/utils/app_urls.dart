@@ -26,6 +26,8 @@ class UserProfileUrls {
 
 class SantUrls {
   static String getSant = 'saint/get_saint_list';
+  static String getSantProfile = 'saint/saint_profile';
+  static String update = 'saint/update_saint_profile';
 }
 
 class HomeUrls {
@@ -33,6 +35,14 @@ class HomeUrls {
   static String getTemples = 'temple/get_temples';
   static String addTemples = 'temple/create_temple';
   static String getFamily = 'temple/get_family_member';
+}
+
+class LocationURLs {
+  static String startJourney = 'saint/start_saint_journey';
+  static String updateJourney = 'saint/update_saint_journey';
+  static String getLiveSantJourney = 'saint/get_live_saint_journey';
+  static String journeyHistory = 'saint/get_saint_journey_history';
+  static String searchSantList = 'saint/get_nearby_saint';
 }
 
 class UtilUrls {

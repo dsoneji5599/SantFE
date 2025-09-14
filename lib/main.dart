@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:sant_app/firebase_options.dart';
 import 'package:sant_app/provider/auth_provider.dart';
 import 'package:sant_app/provider/home_provider.dart';
+import 'package:sant_app/provider/location_provider.dart';
 import 'package:sant_app/provider/profile_provider.dart';
 import 'package:sant_app/provider/sant_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
         ChangeNotifierProvider(create: (context) => SantProvider()),
         ChangeNotifierProvider(create: (context) => HomeProvider()),
+        ChangeNotifierProvider(create: (context) => LocationProvider()),
       ],
       child: MaterialApp(
         title: 'Sant App',

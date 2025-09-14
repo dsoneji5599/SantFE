@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:sant_app/app.dart';
 import 'package:sant_app/provider/auth_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
-import 'package:sant_app/screens/auth/wait_for_sant.dart';
 import 'package:sant_app/themes/app_fonts.dart';
+import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
 import 'package:sant_app/widgets/app_dropdown.dart';
@@ -42,11 +42,25 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  final TextEditingController _salutationController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _sampradayController = TextEditingController();
+  final TextEditingController _upadhiController = TextEditingController();
+  final TextEditingController _sanghController = TextEditingController();
+  final TextEditingController _dikshaPlaceController = TextEditingController();
+  final TextEditingController _dikshaDateController = TextEditingController();
+  final TextEditingController _tapasyaDetailController =
+      TextEditingController();
+  final TextEditingController _knowledgeDetailController =
+      TextEditingController();
+  final TextEditingController _viharDetailController = TextEditingController();
+
   String? selectedCity;
   String? selectedDistrict;
   String? selectedState;
   String? selectedCountry;
   String? selectedSamaj;
+  String? selectedGender;
 
   late UtilProvider utilProvider;
 
@@ -317,6 +331,13 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     },
                   ),
 
+                  // Salutation
+                  AppTextfield(
+                    controller: _salutationController,
+                    label: "Salutation",
+                    hintText: 'Enter your Salutation',
+                  ),
+
                   // Samaj Dropdown
                   AppDropdown<String>(
                     value: selectedSamaj,
@@ -336,6 +357,83 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     },
                   ),
 
+                  // Sampraday
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _sampradayController,
+                      label: "Sampraday",
+                      hintText: 'Enter your Sampraday',
+                    ),
+
+                  // Upadhi
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _upadhiController,
+                      label: "Upadhi",
+                      hintText: 'Enter your Upadhi',
+                    ),
+
+                  // Sangh
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _sanghController,
+                      label: "Sangh",
+                      hintText: 'Enter your Sangh',
+                    ),
+
+                  // Diksha Place
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _dikshaPlaceController,
+                      label: "Diksha Place",
+                      hintText: 'Enter your Diksha Place',
+                    ),
+
+                  // Diksha Date
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _dikshaDateController,
+                      label: 'Diksha Date',
+                      hintText: 'DD-MM-YYYY',
+                      readOnly: true,
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          _dikshaDateController.text =
+                              '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                        }
+                      },
+                    ),
+
+                  // Tapasta Detail
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _tapasyaDetailController,
+                      label: "Tapasta Detail",
+                      hintText: 'Enter your Tapasta Detail',
+                    ),
+
+                  // Knowledge Detail
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _knowledgeDetailController,
+                      label: "Knowledge Detail",
+                      hintText: 'Enter your Knowledge Detail',
+                    ),
+
+                  // Vihar Detail
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _viharDetailController,
+                      label: "Vihar Detail",
+                      hintText: 'Enter your Vihar Detail',
+                    ),
+
                   SizedBox(),
 
                   // Update Button
@@ -351,6 +449,15 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                         }
                       }
 
+                      String formattedDikshaDate = "";
+                      if (_dobController.text.isNotEmpty) {
+                        final parts = _dikshaDateController.text.split('-');
+                        if (parts.length == 3) {
+                          formattedDikshaDate =
+                              '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+                        }
+                      }
+
                       String? base64Image;
                       if (_pickedImage != null) {
                         final bytes = await File(
@@ -361,9 +468,9 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
                       Map<String, dynamic> data = {
                         "firebase_uid": widget.firebaseUid,
+                        "name": _nameController.text,
                         "mobile": _phoneController.text,
                         "email": _emailController.text,
-                        "name": _nameController.text,
                         "dob": formattedDob,
                         "profile_image": base64Image,
                         "samaj": selectedSamaj,
@@ -373,23 +480,61 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                         "country": selectedCountry,
                       };
 
+                      Map<String, dynamic> santData = {
+                        "firebase_uid": widget.firebaseUid,
+                        "name": _nameController.text,
+                        "mobile": _phoneController.text,
+                        "email": _emailController.text,
+                        "dob": formattedDob,
+                        "profile_image": base64Image,
+                        "samaj": selectedSamaj,
+                        "district": selectedDistrict,
+                        "city": selectedCity,
+                        "state": selectedState,
+                        "country": selectedCountry,
+                        "gender": _genderController.text,
+                        "salutation": _salutationController.text,
+                        "sampraday": _sampradayController.text,
+                        "upadhi": _upadhiController.text,
+                        "sangh": _sanghController.text,
+                        "diksha_place": _dikshaPlaceController.text,
+                        "diksha_date": formattedDikshaDate,
+                        "tapasya_details": _tapasyaDetailController.text,
+                        "knowledge_details": _knowledgeDetailController.text,
+                        "vihar_details": _viharDetailController.text,
+                      };
+
                       bool registerSuccess;
 
                       if (widget.isUser) {
                         registerSuccess = await context
                             .read<AuthProvider>()
                             .userRegister(data: data);
+                        MySharedPreferences.instance.setBooleanValue(
+                          "isUser",
+                          widget.isUser,
+                        );
                       } else {
                         registerSuccess = await context
                             .read<AuthProvider>()
-                            .santRegister(data: data);
+                            .santRegister(data: santData);
+                        MySharedPreferences.instance.setBooleanValue(
+                          "isUser",
+                          widget.isUser,
+                        );
                       }
 
                       if (registerSuccess) {
                         if (widget.isUser) {
-                          navigatorPushReplacement(context, App());
+                          navigatorPushReplacement(
+                            context,
+                            App(isUser: widget.isUser),
+                          );
                         } else {
-                          navigatorPushReplacement(context, WaitForSant());
+                          navigatorPushReplacement(
+                            context,
+                            App(isUser: widget.isUser),
+                          );
                         }
                       } else {
                         toastMessage('Register failed. Please try again.');

@@ -23,4 +23,23 @@ class UserProfileRepo extends BaseRepository {
     log(response.body, name: 'response updateUserProfileApi');
     return json.decode(response.body);
   }
+
+  Future santProfileApi() async {
+    final response = await getHttp(
+      api: ApiUrls.baseUrl + SantUrls.getSantProfile,
+      token: true,
+    );
+    log(response.body, name: 'response santProfileApi');
+    return json.decode(response.body);
+  }
+
+  Future santUpdateProfileApi(Map<String, dynamic> data) async {
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + SantUrls.update,
+      data: data,
+      token: true,
+    );
+    log(response.body, name: 'response santUpdateProfileApi');
+    return json.decode(response.body);
+  }
 }

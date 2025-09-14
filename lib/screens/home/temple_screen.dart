@@ -90,7 +90,10 @@ class _TempleScreenState extends State<TempleScreen>
                     SizedBox(width: 30),
                     InkWell(
                       onTap: () {
-                        navigatorPush(context, AddTempleScreen());
+                        navigatorPush(
+                          context,
+                          AddTempleScreen(isDetail: false),
+                        );
                       },
                       child: Container(
                         decoration: BoxDecoration(

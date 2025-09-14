@@ -14,7 +14,8 @@ import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/app_textfield.dart';
 
 class UpdateUserProfileScreen extends StatefulWidget {
-  const UpdateUserProfileScreen({super.key});
+  final bool isUser;
+  const UpdateUserProfileScreen({super.key, required this.isUser});
 
   @override
   State<UpdateUserProfileScreen> createState() =>
@@ -27,11 +28,25 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  final TextEditingController _salutationController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+  final TextEditingController _sampradayController = TextEditingController();
+  final TextEditingController _upadhiController = TextEditingController();
+  final TextEditingController _sanghController = TextEditingController();
+  final TextEditingController _dikshaPlaceController = TextEditingController();
+  final TextEditingController _dikshaDateController = TextEditingController();
+  final TextEditingController _tapasyaDetailController =
+      TextEditingController();
+  final TextEditingController _knowledgeDetailController =
+      TextEditingController();
+  final TextEditingController _viharDetailController = TextEditingController();
+
   String? selectedCity;
   String? selectedDistrict;
   String? selectedState;
   String? selectedCountry;
   String? selectedSamaj;
+  String? selectedGender;
 
   late UtilProvider utilProvider;
   late UserProfileProvider userProfileProvider;
@@ -39,6 +54,7 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
   XFile? _pickedImage;
 
   DateTime? _selectedDob;
+  DateTime? _selectedDikshaDate;
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
@@ -60,28 +76,69 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await userProfileProvider.getProfile();
-      final profile = userProfileProvider.userProfileModel;
+      if (widget.isUser) {
+        await userProfileProvider.getProfile();
+        final profile = userProfileProvider.userProfileModel;
 
-      // Populate text controllers with existing values
-      _nameController.text = profile?.name ?? '';
-      _emailController.text = profile?.email ?? '';
-      _phoneController.text = profile?.mobile ?? '';
-      if (profile?.dob != null) {
-        _selectedDob = DateTime.tryParse(profile!.dob!.toString());
-        if (_selectedDob != null) {
-          _dobController.text =
-              '${_selectedDob!.day.toString().padLeft(2, '0')}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.year}';
+        _nameController.text = profile?.name ?? '';
+        _emailController.text = profile?.email ?? '';
+        _phoneController.text = profile?.mobile ?? '';
+        if (profile?.dob != null) {
+          _selectedDob = DateTime.tryParse(profile!.dob!.toString());
+          if (_selectedDob != null) {
+            _dobController.text =
+                '${_selectedDob!.day.toString().padLeft(2, '0')}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.year}';
+          }
         }
+
+        selectedCountry = profile?.country;
+        selectedState = profile?.state;
+        selectedCity = profile?.city;
+        selectedDistrict = profile?.district;
+        selectedSamaj = profile?.samaj;
+      } else {
+        await userProfileProvider.getProfile();
+        final santProfile = userProfileProvider.santProfileModel;
+
+        _nameController.text = santProfile?.name ?? '';
+        _emailController.text = santProfile?.email ?? '';
+        _phoneController.text = santProfile?.mobile ?? '';
+        _salutationController.text = santProfile?.salutation ?? '';
+        _genderController.text = santProfile?.gender ?? '';
+        _sampradayController.text = santProfile?.sampraday ?? '';
+        _upadhiController.text = santProfile?.upadhi ?? '';
+        _sanghController.text = santProfile?.sangh ?? '';
+        _dikshaPlaceController.text = santProfile?.dikshaPlace ?? '';
+        _tapasyaDetailController.text = santProfile?.tapasyaDetails ?? '';
+        _knowledgeDetailController.text = santProfile?.knowledgeDetails ?? '';
+        _viharDetailController.text = santProfile?.viharDetails ?? '';
+
+        if (santProfile?.dob != null) {
+          _selectedDob = DateTime.tryParse(santProfile!.dob!.toString());
+          if (_selectedDob != null) {
+            _dobController.text =
+                '${_selectedDob!.day.toString().padLeft(2, '0')}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.year}';
+          }
+        }
+
+        if (santProfile?.dikshaDate != null) {
+          _selectedDikshaDate = DateTime.tryParse(
+            santProfile!.dikshaDate!.toString(),
+          );
+          if (_selectedDikshaDate != null) {
+            _dikshaDateController.text =
+                '${_selectedDikshaDate!.day.toString().padLeft(2, '0')}-${_selectedDikshaDate!.month.toString().padLeft(2, '0')}-${_selectedDikshaDate!.year}';
+          }
+        }
+
+        selectedCountry = santProfile?.country;
+        selectedState = santProfile?.state;
+        selectedCity = santProfile?.city;
+        selectedDistrict = santProfile?.district;
+        selectedSamaj = santProfile?.samaj;
+        selectedGender = santProfile?.gender;
       }
 
-      selectedCountry = profile?.country;
-      selectedState = profile?.state;
-      selectedCity = profile?.city;
-      selectedDistrict = profile?.district;
-      selectedSamaj = profile?.samaj;
-
-      // Load dependent dropdowns after setting IDs
       await utilProvider.getCountry();
       await utilProvider.getSamaj();
 
@@ -95,8 +152,30 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
         await utilProvider.getDistrict(cityId: selectedCity!);
       }
 
+      _validateDropdownValues();
+
       setState(() {});
     });
+  }
+
+  void _validateDropdownValues() {
+    // Validate samaj selection
+    final samajIds = utilProvider.samajList
+        .where((samaj) => samaj.samajId != null)
+        .map((samaj) => samaj.samajId)
+        .toList();
+    if (selectedSamaj != null && !samajIds.contains(selectedSamaj)) {
+      selectedSamaj = null;
+    }
+
+    // Validate gender selection for sant users
+    if (!widget.isUser) {
+      final validGenders = ['Male', 'Female', 'Other'];
+      if (selectedGender != null && !validGenders.contains(selectedGender)) {
+        selectedGender = null;
+        _genderController.text = '';
+      }
+    }
   }
 
   @override
@@ -107,7 +186,6 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
           children: [
             SizedBox(height: 50),
 
-            // AppBar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -137,7 +215,6 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // Profile Image Section
             Stack(
               children: [
                 Container(
@@ -200,14 +277,12 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name Field
                   AppTextfield(
                     controller: _nameController,
                     label: "Name",
                     hintText: 'Enter your name',
                   ),
 
-                  // Phone Field
                   AppTextfield(
                     controller: _phoneController,
                     label: "Phone Number",
@@ -217,7 +292,6 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                     enabled: false,
                   ),
 
-                  // Email Field
                   AppTextfield(
                     controller: _emailController,
                     label: "Email",
@@ -246,115 +320,21 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                     },
                   ),
 
-                  // Country Dropdown
-                  AppDropdown<String>(
-                    value: selectedCountry,
-                    label: "Country",
-                    hintText: 'Select your Country',
-                    isRequired: false,
-                    items: utilProvider.countryList
-                        .where((country) => country.countryId != null)
-                        .map(
-                          (country) => DropdownMenuItem<String>(
-                            value: country.countryId,
-                            child: Text(country.country ?? ''),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (String? newValue) async {
-                      setState(() {
-                        selectedCountry = newValue;
-                        selectedState = null;
-                        selectedCity = null;
-                        selectedDistrict = null;
-                      });
-                      if (newValue != null) {
-                        await utilProvider.getState(countryId: newValue);
-                        setState(() {});
-                      }
-                    },
-                  ),
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _salutationController,
+                      label: "Salutation",
+                      hintText: 'Enter your Salutation',
+                    ),
 
-                  // State Dropdown
                   AppDropdown<String>(
-                    value: selectedState,
-                    label: "State",
-                    hintText: 'Select your State',
-                    isRequired: false,
-                    items: utilProvider.stateList
-                        .where((state) => state.stateId != null)
-                        .map(
-                          (state) => DropdownMenuItem<String>(
-                            value: state.stateId,
-                            child: Text(state.state ?? ''),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (String? newValue) async {
-                      setState(() {
-                        selectedState = newValue;
-                        selectedCity = null;
-                        selectedDistrict = null;
-                      });
-                      if (newValue != null) {
-                        await utilProvider.getCity(stateId: newValue);
-                        setState(() {});
-                      }
-                    },
-                  ),
-
-                  // City Dropdown
-                  AppDropdown<String>(
-                    value: selectedCity,
-                    label: "City",
-                    hintText: 'Select your City',
-                    isRequired: false,
-                    items: utilProvider.cityList
-                        .where((city) => city.cityId != null)
-                        .map(
-                          (city) => DropdownMenuItem<String>(
-                            value: city.cityId,
-                            child: Text(city.city ?? ''),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (String? newValue) async {
-                      setState(() {
-                        selectedCity = newValue;
-                        selectedDistrict = null;
-                      });
-                      if (newValue != null) {
-                        await utilProvider.getDistrict(cityId: newValue);
-                        setState(() {});
-                      }
-                    },
-                  ),
-
-                  // District Dropdown
-                  AppDropdown<String>(
-                    value: selectedDistrict,
-                    label: "District",
-                    hintText: 'Select your District',
-                    isRequired: false,
-                    items: utilProvider.districtList
-                        .where((district) => district.districtId != null)
-                        .map(
-                          (district) => DropdownMenuItem<String>(
-                            value: district.districtId,
-                            child: Text(district.district ?? ''),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedDistrict = newValue;
-                      });
-                    },
-                  ),
-
-                  // Samaj Dropdown
-                  AppDropdown<String>(
-                    value: selectedSamaj,
+                    value:
+                        utilProvider.samajList
+                            .where((samaj) => samaj.samajId != null)
+                            .map((samaj) => samaj.samajId)
+                            .contains(selectedSamaj)
+                        ? selectedSamaj
+                        : null,
                     label: "Samaj",
                     hintText: 'Select your Samaj',
                     isRequired: false,
@@ -374,47 +354,185 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                     },
                   ),
 
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _sampradayController,
+                      label: "Sampraday",
+                      hintText: 'Enter your Sampraday',
+                    ),
+
+                  if (!widget.isUser)
+                    AppDropdown<String>(
+                      value:
+                          ['Male', 'Female', 'Other'].contains(selectedGender)
+                          ? selectedGender
+                          : null,
+                      label: "Gender",
+                      hintText: 'Select your Gender',
+                      isRequired: false,
+                      items: ['Male', 'Female', 'Other']
+                          .map(
+                            (gender) => DropdownMenuItem<String>(
+                              value: gender,
+                              child: Text(gender),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedGender = newValue;
+                          _genderController.text = newValue ?? '';
+                        });
+                      },
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _upadhiController,
+                      label: "Upadhi",
+                      hintText: 'Enter your Upadhi',
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _sanghController,
+                      label: "Sangh",
+                      hintText: 'Enter your Sangh',
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _dikshaPlaceController,
+                      label: "Diksha Place",
+                      hintText: 'Enter your Diksha Place',
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _dikshaDateController,
+                      label: 'Diksha Date',
+                      hintText: 'DD-MM-YYYY',
+                      readOnly: true,
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDikshaDate ?? DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          _selectedDikshaDate = picked;
+                          _dikshaDateController.text =
+                              '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                        }
+                      },
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _tapasyaDetailController,
+                      label: "Tapasya Details",
+                      hintText: 'Enter your Tapasya Details',
+                      maxLines: 3,
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _knowledgeDetailController,
+                      label: "Knowledge Details",
+                      hintText: 'Enter your Knowledge Details',
+                      maxLines: 3,
+                    ),
+
+                  if (!widget.isUser)
+                    AppTextfield(
+                      controller: _viharDetailController,
+                      label: "Vihar Details",
+                      hintText: 'Enter your Vihar Details',
+                      maxLines: 3,
+                    ),
+
                   SizedBox(),
 
-                  // Update Button
-                  AppButton(
-                    text: "Update",
-                    onTap: () async {
-                      String formattedDob = "";
-                      if (_selectedDob != null) {
-                        formattedDob =
-                            '${_selectedDob!.year}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.day.toString().padLeft(2, '0')}';
-                      }
+                  Consumer2<UserProfileProvider, UserProfileProvider>(
+                    builder: (context, userProvider, santProvider, child) {
+                      return AppButton(
+                        text: "Update",
+                        onTap: () async {
+                          String formattedDob = "";
+                          if (_selectedDob != null) {
+                            formattedDob =
+                                '${_selectedDob!.year}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.day.toString().padLeft(2, '0')}';
+                          }
 
-                      String? base64Image;
-                      if (_pickedImage != null) {
-                        final bytes = await File(
-                          _pickedImage!.path,
-                        ).readAsBytes();
-                        base64Image = base64Encode(bytes);
-                      }
+                          String formattedDikshaDate = "";
+                          if (_selectedDikshaDate != null) {
+                            formattedDikshaDate =
+                                '${_selectedDikshaDate!.year}-${_selectedDikshaDate!.month.toString().padLeft(2, '0')}-${_selectedDikshaDate!.day.toString().padLeft(2, '0')}';
+                          }
 
-                      Map<String, dynamic> data = {
-                        "mobile": _phoneController.text,
-                        "email": _emailController.text,
-                        "name": _nameController.text,
-                        "dob": formattedDob,
-                        "profile_image": base64Image,
-                        "samaj": selectedSamaj,
-                        "district": selectedDistrict,
-                        "city": selectedCity,
-                        "state": selectedState,
-                        "country": selectedCountry,
-                      };
+                          String? base64Image;
+                          if (_pickedImage != null) {
+                            final bytes = await File(
+                              _pickedImage!.path,
+                            ).readAsBytes();
+                            base64Image = base64Encode(bytes);
+                          }
 
-                      bool registerSuccess = await context
-                          .read<UserProfileProvider>()
-                          .updateProfileProvider(data: data);
+                          if (widget.isUser) {
+                            Map<String, dynamic> data = {
+                              "mobile": _phoneController.text,
+                              "email": _emailController.text,
+                              "name": _nameController.text,
+                              "dob": formattedDob,
+                              "profile_image": base64Image,
+                              "samaj": selectedSamaj,
+                              "district": selectedDistrict,
+                              "city": selectedCity,
+                              "state": selectedState,
+                              "country": selectedCountry,
+                            };
 
-                      if (registerSuccess) {
-                        userProfileProvider.getProfile();
-                        Navigator.pop(context);
-                      }
+                            bool updateSuccess = await userProvider
+                                .updateProfileProvider(data: data);
+                            if (updateSuccess) {
+                              userProvider.getProfile();
+                              Navigator.pop(context);
+                            }
+                          } else {
+                            Map<String, dynamic> santData = {
+                              "mobile": _phoneController.text,
+                              "email": _emailController.text,
+                              "name": _nameController.text,
+                              "dob": formattedDob,
+                              "profile_image": base64Image,
+                              "samaj": selectedSamaj,
+                              "district": selectedDistrict,
+                              "city": selectedCity,
+                              "state": selectedState,
+                              "country": selectedCountry,
+                              "salutation": _salutationController.text,
+                              "gender": _genderController.text,
+                              "sampraday": _sampradayController.text,
+                              "upadhi": _upadhiController.text,
+                              "sangh": _sanghController.text,
+                              "diksha_place": _dikshaPlaceController.text,
+                              "diksha_date": formattedDikshaDate,
+                              "tapasya_details": _tapasyaDetailController.text,
+                              "knowledge_details":
+                                  _knowledgeDetailController.text,
+                              "vihar_details": _viharDetailController.text,
+                            };
+
+                            bool updateSuccess = await santProvider
+                                .updateSantProfileProvider(data: santData);
+                            if (updateSuccess) {
+                              santProvider.getSantProfile();
+                              Navigator.pop(context);
+                            }
+                          }
+                        },
+                      );
                     },
                   ),
                 ].map((e) => Padding(padding: EdgeInsets.only(bottom: 20), child: e)).toList(),
@@ -432,6 +550,16 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
     _dobController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _salutationController.dispose();
+    _genderController.dispose();
+    _sampradayController.dispose();
+    _upadhiController.dispose();
+    _sanghController.dispose();
+    _dikshaPlaceController.dispose();
+    _dikshaDateController.dispose();
+    _tapasyaDetailController.dispose();
+    _knowledgeDetailController.dispose();
+    _viharDetailController.dispose();
     super.dispose();
   }
 }

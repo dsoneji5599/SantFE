@@ -21,6 +21,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> redirect() async {
+    final isUser = await MySharedPreferences.instance.getBooleanValue("isUser");
+
     final value = await MySharedPreferences.instance.getStringValue(
       "access_token",
     );
@@ -29,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     navigatorPushReplacement(
       context,
-      value == null ? const OnboardingScreen() : const App(),
+      value == null ? OnboardingScreen() : App(isUser: isUser),
     );
   }
 

@@ -26,6 +26,8 @@ class AppTextfield extends StatefulWidget {
   final bool isRequired;
   final bool isObscureText;
   final List<TextInputFormatter>? inputFormatters;
+  final Color? fillColor;
+  final Function(String)? onSubmitted;
 
   const AppTextfield({
     super.key,
@@ -51,6 +53,8 @@ class AppTextfield extends StatefulWidget {
     this.isRequired = true,
     this.isObscureText = false,
     this.inputFormatters,
+    this.fillColor,
+    this.onSubmitted,
   });
 
   @override
@@ -84,12 +88,13 @@ class _AppTextfieldState extends State<AppTextfield> {
           autovalidateMode: AutovalidateMode.onUserInteraction,
           obscureText: widget.isObscureText,
           inputFormatters: widget.inputFormatters,
+          onFieldSubmitted: widget.onSubmitted,
           decoration: InputDecoration(
             errorStyle: widget.errorStyle,
             errorMaxLines: 3,
             counterText: '',
             prefixIcon: widget.prefix,
-            fillColor: Colors.white.withValues(alpha: 0.1),
+            fillColor: widget.fillColor ?? Colors.white.withValues(alpha: 0.1),
             filled: true,
             suffixIcon: widget.suffix,
             contentPadding: const EdgeInsets.symmetric(
