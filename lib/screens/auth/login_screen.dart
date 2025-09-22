@@ -146,8 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                             return;
-                          } else {
-                            toastMessage("This User Is Already Exist");
                           }
                         } else {
                           final isNewSant = !(await context
@@ -165,8 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                             return;
-                          } else {
-                            toastMessage("This Sant Is Already Exist");
                           }
                         }
 
@@ -289,8 +285,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                             return;
-                          } else {
-                            toastMessage("This User Is Already Exist");
                           }
 
                           // Existing user login attempt

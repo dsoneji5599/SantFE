@@ -32,8 +32,11 @@ class SantUrls {
 
 class HomeUrls {
   static String getEvents = 'event/get_events';
+  static String addEvent = 'event/create_event';
+  static String editEvent = 'event/edit_event';
   static String getTemples = 'temple/get_temples';
   static String addTemples = 'temple/create_temple';
+  static String editTemples = 'temple/edit_temple';
   static String getFamily = 'temple/get_family_member';
 }
 

@@ -77,6 +77,9 @@ class HomeProvider extends ChangeNotifier {
       Map<String, dynamic> responseData = await repo.addTempleAPI(data);
       if (responseData['status_code'] == 201) {
         toastMessage("Temple Added Successfully.");
+        await getTempleList(filterType: 'all');
+        await getTempleList(filterType: 'my');
+        notifyListeners();
         return true;
       } else {
         log(responseData.toString(), name: 'addTemple');
@@ -86,6 +89,80 @@ class HomeProvider extends ChangeNotifier {
     } catch (e, s) {
       log("$e", stackTrace: s, name: "addTemple");
       toastMessage("Failed Adding Temple!");
+      return false;
+    }
+  }
+
+  Future<bool> editTemple({
+    required Map<String, dynamic> data,
+    required String templeId,
+  }) async {
+    try {
+      Map<String, dynamic> responseData = await repo.editTempleAPI(
+        data,
+        templeId,
+      );
+      if (responseData['status_code'] == 200) {
+        toastMessage("Temple Updated Successfully.");
+        await getTempleList(filterType: 'all');
+        await getTempleList(filterType: 'my');
+        return true;
+      } else {
+        log(responseData.toString(), name: 'editTemple');
+        toastMessage("Failed Updating Temple!");
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "editTemple");
+      toastMessage("Failed Updating Temple!");
+      return false;
+    }
+  }
+
+  Future<bool> addEvent({required Map<String, dynamic> data}) async {
+    try {
+      Map<String, dynamic> responseData = await repo.addEventAPI(data);
+      if (responseData['status_code'] == 201) {
+        toastMessage("Event Added Successfully.");
+        await getEventList();
+        notifyListeners();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'addEvent');
+        toastMessage("Failed Adding Event!");
+        await getEventList();
+        notifyListeners();
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "addEvent");
+      toastMessage("Failed Adding Event!");
+      return false;
+    }
+  }
+
+  Future<bool> editEvent({
+    required Map<String, dynamic> data,
+    required String eventId,
+  }) async {
+    try {
+      Map<String, dynamic> responseData = await repo.editEventAPI(
+        data,
+        eventId,
+      );
+      if (responseData['status_code'] == 200) {
+        toastMessage("Event Updated Successfully.");
+        await getEventList();
+        notifyListeners();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'editEvent');
+        toastMessage("Failed Updating Event!");
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "editEvent");
+      toastMessage("Failed Updating Event!");
       return false;
     }
   }

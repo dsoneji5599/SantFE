@@ -41,4 +41,36 @@ class HomeRepo extends BaseRepository {
     log(response.body, name: 'response addTempleAPI');
     return json.decode(response.body);
   }
+
+  Future editTempleAPI(Map<String, dynamic> data, String templeId) async {
+    String params = '?temple_id=$templeId';
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.editTemples + params,
+      data: data,
+      token: true,
+    );
+    log(response.body, name: 'response editTempleAPI');
+    return json.decode(response.body);
+  }
+
+  Future addEventAPI(Map<String, dynamic> data) async {
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.addEvent,
+      data: data,
+      token: true,
+    );
+    log(response.body, name: 'response addEventAPI');
+    return json.decode(response.body);
+  }
+
+  Future editEventAPI(Map<String, dynamic> data, String eventId) async {
+    String params = '?event_id=$eventId';
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.editEvent + params,
+      data: data,
+      token: true,
+    );
+    log(response.body, name: 'response editEventAPI');
+    return json.decode(response.body);
+  }
 }

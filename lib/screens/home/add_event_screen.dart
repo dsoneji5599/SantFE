@@ -16,18 +16,22 @@ import 'package:sant_app/widgets/app_textfield.dart';
 
 class AddEventScreen extends StatefulWidget {
   final bool? isDetail;
+  final bool? isEdit;
   final String? imagePath;
   final String? eventName;
   final String? eventDate;
   final String? description;
+  final String eventId;
 
   const AddEventScreen({
     super.key,
     this.isDetail,
+    this.isEdit,
     this.imagePath,
     this.eventName,
     this.eventDate,
     this.description,
+    required this.eventId,
   });
 
   @override
@@ -38,6 +42,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _eventDateController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
+  DateTime? _selectedEventDate;
 
   XFile? _pickedImage;
   ImageProvider? initialImage;
@@ -66,6 +72,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
     );
     if (picked != null) {
       setState(() {
+        _selectedEventDate = picked;
         _eventDateController.text =
             "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
       });
@@ -87,11 +94,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
   @override
   void initState() {
     super.initState();
+    provider = Provider.of<HomeProvider>(context, listen: false);
+
     _eventNameController.text = widget.eventName ?? '';
     _eventDateController.text = widget.eventDate ?? '';
     _descriptionController.text = widget.description ?? '';
 
-    if (widget.imagePath != null) {
+    if (widget.imagePath != null && widget.imagePath!.isNotEmpty) {
       initialImage = CachedNetworkImageProvider(widget.imagePath!);
     }
   }
@@ -193,7 +202,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                                       fit: BoxFit.contain,
                                     ),
                                   )
-                                : (widget.imagePath != null
+                                : (initialImage != null
                                       ? ClipRRect(
                                           borderRadius: BorderRadius.circular(
                                             8,
@@ -362,7 +371,25 @@ class _AddEventScreenState extends State<AddEventScreen> {
                               AppButton(
                                 text: "Submit",
                                 onTap: () async {
-                                  if (_pickedImage == null) {
+                                  String formattedDate = "";
+                                  if (_selectedEventDate != null) {
+                                    formattedDate =
+                                        '${_selectedEventDate!.year}-${_selectedEventDate!.month.toString().padLeft(2, '0')}-${_selectedEventDate!.day.toString().padLeft(2, '0')}';
+                                  } else if (widget.eventDate != null &&
+                                      widget.eventDate!.isNotEmpty) {
+                                    // Correctly handle "DD/MM/YYYY" format
+                                    final parts = widget.eventDate!.split('/');
+                                    if (parts.length == 3) {
+                                      final day = parts[0].padLeft(2, '0');
+                                      final month = parts[1].padLeft(2, '0');
+                                      final year = parts[2];
+                                      formattedDate = '$year-$month-$day';
+                                    }
+                                  }
+
+                                  if (_pickedImage == null &&
+                                      (widget.imagePath == null ||
+                                          widget.imagePath!.isEmpty)) {
                                     showToast('Please select an image');
                                     return;
                                   }
@@ -374,9 +401,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
                                     return;
                                   }
 
-                                  if (_eventDateController.text
-                                      .trim()
-                                      .isEmpty) {
+                                  if (formattedDate.isEmpty) {
                                     showToast('Please select event date');
                                     return;
                                   }
@@ -394,22 +419,40 @@ class _AddEventScreenState extends State<AddEventScreen> {
                                       _pickedImage!.path,
                                     ).readAsBytes();
                                     base64Image = base64Encode(bytes);
+                                  } else {
+                                    base64Image = null;
                                   }
 
                                   Map<String, dynamic> data = {
                                     "name": _eventNameController.text.trim(),
-                                    "date": _eventDateController.text.trim(),
+                                    "event_date": formattedDate,
                                     "description": _descriptionController.text
                                         .trim(),
-                                    "image_path": base64Image,
                                   };
 
-                                  bool success = await context
-                                      .read<HomeProvider>()
-                                      .addTemple(data: data);
+                                  if (base64Image != null) {
+                                    data["image_path"] = base64Image;
+                                  }
 
-                                  if (success) {
-                                    Navigator.pop(context);
+                                  if (widget.isEdit == true) {
+                                    bool success = await context
+                                        .read<HomeProvider>()
+                                        .editEvent(
+                                          data: data,
+                                          eventId: widget.eventId,
+                                        );
+
+                                    if (success) {
+                                      Navigator.pop(context);
+                                    }
+                                  } else {
+                                    bool success = await context
+                                        .read<HomeProvider>()
+                                        .addEvent(data: data);
+
+                                    if (success) {
+                                      Navigator.pop(context);
+                                    }
                                   }
                                 },
                               ),

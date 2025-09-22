@@ -159,22 +159,22 @@ class _AppDrawerState extends State<AppDrawer> {
                       navigatorPush(context, AddDirectionScreen());
                     },
                   ),
-                if (isUser == false)
-                  ListTile(
-                    leading: Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.appOrange,
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.appGrey.withValues(alpha: 0.5),
-                    ),
-                    title: Text('Journey History'),
-                    onTap: () {
-                      Keys.scaffoldKey.currentState?.closeDrawer();
-                      navigatorPush(context, SantJourneyHistoryScreen());
-                    },
+                // if (isUser == false)
+                ListTile(
+                  leading: Icon(
+                    Icons.location_on_outlined,
+                    color: AppColors.appOrange,
                   ),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.appGrey.withValues(alpha: 0.5),
+                  ),
+                  title: Text('Journey History'),
+                  onTap: () {
+                    Keys.scaffoldKey.currentState?.closeDrawer();
+                    navigatorPush(context, SantJourneyHistoryScreen());
+                  },
+                ),
                 ListTile(
                   leading: Icon(Icons.event, color: AppColors.appOrange),
                   trailing: Icon(

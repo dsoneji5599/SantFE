@@ -44,6 +44,7 @@ class _TempleScreenState extends State<TempleScreen>
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<HomeProvider>();
     return isLoading
         ? Center(child: CircularProgressIndicator())
         : AppScaffold(
@@ -52,7 +53,6 @@ class _TempleScreenState extends State<TempleScreen>
             body: Column(
               children: [
                 SizedBox(height: 60),
-
                 // Appbar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -89,11 +89,18 @@ class _TempleScreenState extends State<TempleScreen>
                     ),
                     SizedBox(width: 30),
                     InkWell(
-                      onTap: () {
+                      onTap: () async {
                         navigatorPush(
                           context,
-                          AddTempleScreen(isDetail: false),
+                          AddTempleScreen(isDetail: false, templeId: ''),
                         );
+                        setState(() {
+                          isLoading = true;
+                        });
+                        await _initAsync();
+                        setState(() {
+                          isLoading = false;
+                        });
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -122,7 +129,6 @@ class _TempleScreenState extends State<TempleScreen>
                   ],
                 ),
                 SizedBox(height: 20),
-
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
@@ -130,10 +136,12 @@ class _TempleScreenState extends State<TempleScreen>
                       _buildTempleList(
                         provider.templeListAll,
                         "No Temples Found",
+                        false,
                       ),
                       _buildTempleList(
                         provider.templeListMy,
                         "No My Temples Found",
+                        true,
                       ),
                     ],
                   ),
@@ -143,7 +151,11 @@ class _TempleScreenState extends State<TempleScreen>
           );
   }
 
-  Widget _buildTempleList(List<TempleModel> temples, String emptyText) {
+  Widget _buildTempleList(
+    List<TempleModel> temples,
+    String emptyText,
+    bool isMyTemples,
+  ) {
     return temples.isEmpty
         ? Center(
             child: Text(
@@ -160,7 +172,7 @@ class _TempleScreenState extends State<TempleScreen>
             separatorBuilder: (context, index) => SizedBox(height: 15),
             itemBuilder: (context, index) {
               final temple = temples[index];
-              return TempleCard(temple: temple);
+              return TempleCard(temple: temple, isMyTemple: isMyTemples);
             },
           );
   }
@@ -168,74 +180,121 @@ class _TempleScreenState extends State<TempleScreen>
 
 class TempleCard extends StatelessWidget {
   final TempleModel temple;
+  final bool isMyTemple;
 
-  const TempleCard({super.key, required this.temple});
+  const TempleCard({super.key, required this.temple, required this.isMyTemple});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        navigatorPush(
-          context,
-          AddTempleScreen(
-            isDetail: true,
-            description: temple.description,
-            imagePath: temple.imagePath,
-            templeName: temple.name,
-            templeType: temple.type,
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 2,
+            offset: Offset(0, 2),
           ),
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image:
-                      (temple.imagePath != null && temple.imagePath!.isNotEmpty)
-                      ? NetworkImage(temple.imagePath!)
-                      : AssetImage(AppImages.userSample) as ImageProvider,
-                  fit: BoxFit.cover,
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              InkWell(
+                onTap: () {
+                  navigatorPush(
+                    context,
+                    AddTempleScreen(
+                      isDetail: true,
+                      isEdit: false,
+                      description: temple.description,
+                      imagePath: temple.imagePath,
+                      templeName: temple.name,
+                      templeType: temple.type,
+                      templeId: temple.templeId ?? "N/A",
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image:
+                          (temple.imagePath != null &&
+                              temple.imagePath!.isNotEmpty)
+                          ? NetworkImage(temple.imagePath!)
+                          : AssetImage(AppImages.userSample) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
+              if (isMyTemple)
+                Positioned(
+                  bottom: -20,
+                  right: 10,
+                  left: 10,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      textStyle: TextStyle(fontSize: 12),
+                      backgroundColor: Colors.white,
+                      elevation: 4,
+                    ),
+                    onPressed: () {
+                      navigatorPush(
+                        context,
+                        AddTempleScreen(
+                          isDetail: false,
+                          isEdit: true,
+                          description: temple.description,
+                          imagePath: temple.imagePath,
+                          templeName: temple.name,
+                          templeType: temple.type,
+                          templeId: temple.templeId ?? "N/A",
+                        ),
+                      );
+                    },
+                    child: Text("Edit", style: AppFonts.outfitBlack),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                navigatorPush(
+                  context,
+                  AddTempleScreen(
+                    isDetail: true,
+                    isEdit: false,
+                    description: temple.description,
+                    imagePath: temple.imagePath,
+                    templeName: temple.name,
+                    templeType: temple.type,
+                    templeId: temple.templeId ?? "N/A",
+                  ),
+                );
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          temple.name ?? 'N/A',
-                          style: AppFonts.outfitBlack.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    temple.name ?? 'N/A',
+                    style: AppFonts.outfitBlack.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -247,8 +306,7 @@ class TempleCard extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    temple.description ??
-                        'This is a Tri murti temple which is located at gandhinagar to mahesana highway with a three temple inside it.',
+                    temple.description ?? 'No Description',
                     style: AppFonts.outfitBlack.copyWith(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -260,8 +318,8 @@ class TempleCard extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

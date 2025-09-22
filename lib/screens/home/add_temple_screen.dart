@@ -17,18 +17,22 @@ import 'package:sant_app/widgets/app_textfield.dart';
 
 class AddTempleScreen extends StatefulWidget {
   final bool? isDetail;
+  final bool? isEdit;
   final String? imagePath;
   final String? templeName;
   final String? templeType;
   final String? description;
+  final String templeId;
 
   const AddTempleScreen({
     super.key,
     this.isDetail,
+    this.isEdit,
     this.imagePath,
     this.templeName,
     this.templeType,
     this.description,
+    required this.templeId,
   });
 
   @override
@@ -327,7 +331,9 @@ class _AddTempleScreenState extends State<AddTempleScreen> {
                               AppButton(
                                 text: "Submit",
                                 onTap: () async {
-                                  if (_pickedImage == null) {
+                                  if (_pickedImage == null &&
+                                      (widget.imagePath == null ||
+                                          widget.imagePath!.isEmpty)) {
                                     showToast('Please select an image');
                                     return;
                                   }
@@ -358,6 +364,8 @@ class _AddTempleScreenState extends State<AddTempleScreen> {
                                       _pickedImage!.path,
                                     ).readAsBytes();
                                     base64Image = base64Encode(bytes);
+                                  } else {
+                                    base64Image = null;
                                   }
 
                                   Map<String, dynamic> data = {
@@ -368,12 +376,30 @@ class _AddTempleScreenState extends State<AddTempleScreen> {
                                     "image_path": base64Image,
                                   };
 
-                                  bool success = await context
-                                      .read<HomeProvider>()
-                                      .addTemple(data: data);
+                                  if (base64Image == null) {
+                                    data.remove('image_path');
+                                  }
 
-                                  if (success) {
-                                    Navigator.pop(context);
+                                  // Edit Temple
+                                  if (widget.isEdit == true) {
+                                    bool success = await context
+                                        .read<HomeProvider>()
+                                        .editTemple(
+                                          data: data,
+                                          templeId: widget.templeId,
+                                        );
+
+                                    if (success) {
+                                      Navigator.pop(context);
+                                    }
+                                  } else {
+                                    bool success = await context
+                                        .read<HomeProvider>()
+                                        .addTemple(data: data);
+
+                                    if (success) {
+                                      Navigator.pop(context);
+                                    }
                                   }
                                 },
                               ),

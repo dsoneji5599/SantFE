@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/event_model.dart';
@@ -6,6 +8,7 @@ import 'package:sant_app/screens/home/add_event_screen.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/utils/extensions.dart';
+import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 
@@ -19,6 +22,7 @@ class EventScreen extends StatefulWidget {
 class _EventScreenState extends State<EventScreen> {
   late HomeProvider provider;
   bool isLoading = true;
+  bool? isUser;
 
   @override
   void initState() {
@@ -33,6 +37,8 @@ class _EventScreenState extends State<EventScreen> {
 
   Future<void> _initAsync() async {
     await provider.getEventList();
+    isUser = await MySharedPreferences.instance.getBooleanValue("isUser");
+    setState(() {});
   }
 
   @override
@@ -74,6 +80,49 @@ class _EventScreenState extends State<EventScreen> {
 
                     SizedBox(height: 35),
 
+                    if (isUser == false)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 150,
+                            child: InkWell(
+                              onTap: () {
+                                navigatorPush(
+                                  context,
+                                  AddEventScreen(isDetail: false, eventId: ""),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.add_circle,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        "Add Event",
+                                        style: AppFonts.outfitBlack,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    SizedBox(height: 15),
+
                     Expanded(
                       child: eventList.isEmpty
                           ? Center(child: Text("No Events found"))
@@ -98,62 +147,112 @@ class _EventScreenState extends State<EventScreen> {
 
 class EventCard extends StatelessWidget {
   final EventModel event;
+  final bool isMyEvent;
 
-  const EventCard({super.key, required this.event});
+  const EventCard({super.key, required this.event, this.isMyEvent = false});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        navigatorPush(
-          context,
-          AddEventScreen(
-            description: event.description,
-            eventDate: event.eventDate?.toDDMMYYYY().toString(),
-            eventName: event.name,
-            imagePath: event.imagePath,
-            isDetail: true,
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 25),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 2,
+            offset: Offset(0, 2),
           ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 25),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              spreadRadius: 2,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image:
-                      (event.imagePath != null && event.imagePath!.isNotEmpty)
-                      ? NetworkImage(event.imagePath!)
-                      : AssetImage(AppImages.userSample) as ImageProvider,
-                  fit: BoxFit.cover,
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              InkWell(
+                onTap: () {
+                  navigatorPush(
+                    context,
+                    AddEventScreen(
+                      description: event.description,
+                      eventDate: event.eventDate?.toDDMMYYYY().toString(),
+                      eventName: event.name,
+                      imagePath: event.imagePath,
+                      isDetail: true,
+                      eventId: event.eventId ?? "N/A",
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image:
+                          (event.imagePath != null &&
+                              event.imagePath!.isNotEmpty)
+                          ? NetworkImage(event.imagePath!)
+                          : AssetImage(AppImages.userSample) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
+              Positioned(
+                bottom: -30,
+                right: 10,
+                left: 10,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    textStyle: TextStyle(fontSize: 12),
+                    backgroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    log("Edit button clicked");
+                    navigatorPush(
+                      context,
+                      AddEventScreen(
+                        description: event.description,
+                        eventDate: event.eventDate?.toDDMMYYYY().toString(),
+                        eventName: event.name,
+                        imagePath: event.imagePath,
+                        isDetail: false,
+                        isEdit: true,
+                        eventId: event.eventId ?? "N/A",
+                      ),
+                    );
+                  },
+                  child: Text("Edit", style: AppFonts.outfitBlack),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                navigatorPush(
+                  context,
+                  AddEventScreen(
+                    description: event.description,
+                    eventDate: event.eventDate?.toDDMMYYYY().toString(),
+                    eventName: event.name,
+                    imagePath: event.imagePath,
+                    isDetail: true,
+                    eventId: event.eventId ?? "N/A",
+                  ),
+                );
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Event title
                   Text(
                     event.name ?? 'N/A',
                     style: AppFonts.outfitBlack.copyWith(
@@ -188,8 +287,8 @@ class EventCard extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
