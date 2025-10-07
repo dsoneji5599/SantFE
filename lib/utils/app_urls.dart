@@ -30,6 +30,12 @@ class SantUrls {
   static String update = 'saint/update_saint_profile';
 }
 
+class Bookmark {
+  static String getSavedSant = 'bookmark/get_bookmarks';
+  static String addBookmark = 'bookmark/add_bookmark';
+  static String removeBookmark = 'bookmark/remove_bookmark';
+}
+
 class HomeUrls {
   static String getEvents = 'event/get_events';
   static String addEvent = 'event/create_event';

@@ -37,12 +37,6 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
   }
 
   @override
-  void dispose() {
-    provider.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return isLoading
         ? Center(child: CircularProgressIndicator())

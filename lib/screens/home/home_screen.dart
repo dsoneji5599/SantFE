@@ -7,6 +7,7 @@ import 'package:sant_app/screens/detail_screens/sant_detail_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
+import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_drawer.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
@@ -87,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final sant = santList[index];
-                                return SantCard(sant: sant);
+                                return SantCard(sant: sant, provider: provider);
                               },
                             ),
                     ),
@@ -101,8 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class SantCard extends StatelessWidget {
   final SantListModel sant;
+  final SantProvider provider;
 
-  const SantCard({super.key, required this.sant});
+  const SantCard({super.key, required this.sant, required this.provider});
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +193,40 @@ class SantCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -10,
+              right: 0,
+              child: IconButton(
+                onPressed: () async {
+                  if (sant.isBookmarked == false) {
+                    bool success = await context
+                        .read<SantProvider>()
+                        .addBookmark(santId: sant.saintId ?? "");
+
+                    if (success) {
+                      await provider.getSantList();
+                    }
+                  } else if (sant.isBookmarked != false) {
+                    toastMessage("Remove Bookmark from Sant Tab");
+                    // bool
+                    // success = await context.read<SantProvider>().removeBookmark(
+                    //   bookmarkId:
+                    //       sant.saintId ?? // TODO: Have to Add bookmark_id for removing sant
+                    //       "",
+                    // );
+
+                    // if (success) {
+                    //   await provider.getSantList();
+                    // }
+                  }
+                },
+                icon: Icon(
+                  sant.isBookmarked == true
+                      ? Icons.bookmark
+                      : Icons.bookmark_outline,
                 ),
               ),
             ),
