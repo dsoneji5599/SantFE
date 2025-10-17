@@ -8,11 +8,13 @@ class AppScaffold extends StatelessWidget {
     required this.body,
     this.scaffoldKey,
     this.drawer,
+    this.fab,
   });
   final AppBar? appBar;
   final Widget body;
   final GlobalKey<ScaffoldState>? scaffoldKey;
   final Widget? drawer;
+  final FloatingActionButton? fab;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +22,7 @@ class AppScaffold extends StatelessWidget {
       key: scaffoldKey,
       appBar: appBar,
       drawer: drawer,
+      floatingActionButton: fab,
       body: Container(
         width: double.infinity,
         decoration: BoxDecoration(

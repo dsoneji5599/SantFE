@@ -5,9 +5,12 @@ import 'package:sant_app/repositories/base_repo.dart';
 import 'package:sant_app/utils/app_urls.dart';
 
 class SantRepo extends BaseRepository {
-  Future getSantApi() async {
-    final response = await getHttp(
-      api: ApiUrls.baseUrl + SantUrls.getSant,
+  Future getSantApi(Map<String, dynamic> data, int offset) async {
+    String params = '?limit=10&offset=$offset';
+
+    final response = await postHttp(
+      data: data,
+      api: ApiUrls.baseUrl + SantUrls.getSant + params,
       token: true,
     );
     log(response.body, name: 'response getSantApi');

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
@@ -284,6 +285,21 @@ class _OtpScreenState extends State<OtpScreen> {
                       widget.verificationId,
                       smsCode,
                     );
+
+                    if (user != null) {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.user?.uid)
+                          .set({
+                            'uid': user.user?.uid ?? '',
+                            'name': user.user?.displayName ?? '',
+                            'email': '',
+                            'photoUrl': user.user?.photoURL ?? '',
+                            'phone': user.user?.phoneNumber ?? '',
+                            'createdAt': FieldValue.serverTimestamp(),
+                            'isUser': widget.isUser,
+                          }, SetOptions(merge: true));
+                    }
 
                     if (user != null) {
                       bool loginSuccess;

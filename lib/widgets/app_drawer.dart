@@ -7,6 +7,7 @@ import 'package:sant_app/screens/auth/onboarding_screen.dart';
 import 'package:sant_app/screens/drawer/event_screen.dart';
 import 'package:sant_app/screens/drawer/add_direction_screen.dart';
 import 'package:sant_app/screens/drawer/sant_journey_history.dart';
+import 'package:sant_app/screens/group_chat/chat_list_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
@@ -187,6 +188,22 @@ class _AppDrawerState extends State<AppDrawer> {
                     navigatorPush(context, EventScreen());
                   },
                 ),
+                if (isUser == false)
+                  ListTile(
+                    leading: Icon(
+                      Icons.chat_outlined,
+                      color: AppColors.appOrange,
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.appGrey.withValues(alpha: 0.5),
+                    ),
+                    title: Text('Chat'),
+                    onTap: () {
+                      Keys.scaffoldKey.currentState?.closeDrawer();
+                      navigatorPush(context, ChatListScreen());
+                    },
+                  ),
               ],
             ),
             ListTile(

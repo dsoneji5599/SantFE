@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
 import 'package:sant_app/provider/sant_provider.dart';
+import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/screens/detail_screens/sant_detail_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
@@ -12,6 +13,7 @@ import 'package:sant_app/widgets/app_drawer.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/keys.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,13 +24,87 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late SantProvider provider;
+  late UtilProvider utilProvider;
   bool isLoading = true;
+
+  List<String> selectedSamajIds = [];
+
+  Future<void> _showFilterDialog() async {
+    final samajList = utilProvider.samajList;
+    final tempSelectedIds = Set<String>.from(selectedSamajIds);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Filter Samaj'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: samajList.map((samaj) {
+                  return CheckboxListTile(
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(samaj.samajName ?? 'N/A'),
+                    value: tempSelectedIds.contains(samaj.samajId),
+                    onChanged: (value) {
+                      if (value == true) {
+                        tempSelectedIds.add(samaj.samajId ?? '');
+                      } else {
+                        tempSelectedIds.remove(samaj.samajId);
+                      }
+                      (context as Element).markNeedsBuild();
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                selectedSamajIds = tempSelectedIds.toList();
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.setStringList("selectedSamaj", selectedSamajIds);
+
+                Map<String, dynamic> body = {};
+                if (selectedSamajIds.isNotEmpty) {
+                  body["samaj"] = selectedSamajIds;
+                }
+
+                await provider.getSantList(data: body, offSet: 0);
+                Navigator.of(context).pop();
+              },
+              child: Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
     super.initState();
+    utilProvider = Provider.of<UtilProvider>(context, listen: false);
     provider = Provider.of<SantProvider>(context, listen: false);
-    _initAsync().then((value) {
+
+    _initAsync().then((value) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      selectedSamajIds = prefs.getStringList("selectedSamaj") ?? [];
+      Map<String, dynamic> body = {};
+      if (selectedSamajIds.isNotEmpty) {
+        body["samaj"] = selectedSamajIds;
+      }
+      await provider.getSantList(data: body, offSet: 0);
       setState(() {
         isLoading = false;
       });
@@ -36,7 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initAsync() async {
-    await provider.getSantList();
+    await provider.getSantList(data: {}, offSet: 0);
+    await utilProvider.getSamaj();
   }
 
   @override
@@ -72,7 +149,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 50,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 24),
+                        InkWell(
+                          onTap: () {
+                            _showFilterDialog();
+                          },
+                          child: Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
                       ],
                     ),
 
@@ -207,7 +293,7 @@ class SantCard extends StatelessWidget {
                         .addBookmark(santId: sant.saintId ?? "");
 
                     if (success) {
-                      await provider.getSantList();
+                      await provider.getSantList(data: {}, offSet: 0);
                     }
                   } else if (sant.isBookmarked != false) {
                     toastMessage("Remove Bookmark from Sant Tab");

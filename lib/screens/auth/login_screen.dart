@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/app.dart';
@@ -120,6 +122,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       try {
                         final value = await signInWithGoogle();
 
+                        log(value.toString(), name: "Signin with Google Logs");
+
                         if (value == null) {
                           Navigator.pop(loaderCTX0!);
                           toastMessage(
@@ -127,6 +131,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                           return;
                         }
+
+                        final currentUser = FirebaseAuth.instance.currentUser;
+                        if (currentUser == null ||
+                            currentUser.uid != value.user?.uid) {
+                          Navigator.pop(loaderCTX0!);
+                          toastMessage("User not authenticated properly.");
+                          return;
+                        }
+
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(value.user?.uid)
+                            .set({
+                              'uid': value.user?.uid ?? '',
+                              'name': value.user?.displayName ?? '',
+                              'email': value.user?.email ?? '',
+                              'photoUrl': value.user?.photoURL ?? '',
+                              'phone': '', // no phone here for Google Sign-In
+                              'createdAt': FieldValue.serverTimestamp(),
+                              'isUser': widget.isUser,
+                            }, SetOptions(merge: true));
 
                         Navigator.pop(loaderCTX0!);
 

@@ -410,12 +410,12 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                       },
                     ),
 
-                  // Tapasta Detail
+                  // Tapasya Detail
                   if (!widget.isUser)
                     AppTextfield(
                       controller: _tapasyaDetailController,
-                      label: "Tapasta Detail",
-                      hintText: 'Enter your Tapasta Detail',
+                      label: "Tapasya Detail",
+                      hintText: 'Enter your Tapasya Detail',
                     ),
 
                   // Knowledge Detail

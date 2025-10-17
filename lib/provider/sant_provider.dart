@@ -11,9 +11,12 @@ class SantProvider extends ChangeNotifier {
   List<SantListModel> santList = [];
   List<SavedSantListModel> savedSantList = [];
 
-  Future<dynamic> getSantList() async {
+  Future<dynamic> getSantList({
+    required Map<String, dynamic> data,
+    required int offSet,
+  }) async {
     try {
-      Map<String, dynamic> responseData = await repo.getSantApi();
+      Map<String, dynamic> responseData = await repo.getSantApi(data, offSet);
       if (responseData['status_code'] == 200) {
         santList = List<SantListModel>.from(
           responseData["data"].map((x) => SantListModel.fromJson(x)),
