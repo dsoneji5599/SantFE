@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:sant_app/models/live_sant_model.dart';
+import 'package:sant_app/models/nearby_live_sant_model.dart';
 import 'package:sant_app/models/sant_journey_history.dart';
 import 'package:sant_app/repositories/location_repo.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
@@ -11,7 +12,7 @@ class LocationProvider extends ChangeNotifier {
   String journeyId = '';
   LiveSantJourneyModel? liveSantJourneyModel;
   List<SantJourneyHistoryModel> historyList = [];
-  List<SantJourneyHistoryModel> nearbySantList = [];
+  List<NearbyLiveSantModel> nearbySantList = [];
 
   Future<bool> startJourneyProvider({
     required Map<String, dynamic> data,
@@ -115,13 +116,23 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  Future<dynamic> getNearbySantList() async {
+  Future<List<NearbyLiveSantModel>?> getNearbySantList({
+    required String city,
+    required Map<String, dynamic> data,
+    required int offSet,
+  }) async {
     try {
-      Map<String, dynamic> responseData = await repo.getNearbySantPI();
+      Map<String, dynamic> responseData = await repo.getNearbySantPI(
+        data,
+        offSet,
+        city,
+      );
+
       if (responseData['status_code'] == 200) {
-        nearbySantList = List<SantJourneyHistoryModel>.from(
-          responseData["data"].map((x) => SantJourneyHistoryModel.fromJson(x)),
-        );
+        nearbySantList = (responseData["data"] as List)
+            .map((x) => NearbyLiveSantModel.fromJson(x))
+            .toList();
+
         notifyListeners();
         return nearbySantList;
       } else {
@@ -130,5 +141,6 @@ class LocationProvider extends ChangeNotifier {
     } catch (e) {
       log("$e", name: "Error getNearbySantList");
     }
+    return null;
   }
 }

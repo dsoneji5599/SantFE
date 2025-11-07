@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -6,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:provider/provider.dart';
+import 'package:sant_app/provider/location_provider.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
@@ -23,6 +26,9 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  late LocationProvider provider;
+  bool isLoading = true;
+
   TextEditingController searchController = TextEditingController();
 
   double? latitude, longitude;
@@ -31,42 +37,78 @@ class _SearchScreenState extends State<SearchScreen> {
   final Set<Circle> _circles = {};
   final Set<Polyline> _polylines = {};
   GoogleMapController? _controller;
+  final Completer<GoogleMapController> _mapController = Completer();
 
   bool isJourneyStarted = false;
-  LatLng? _currentDestination; // Track the current destination
+  LatLng? _currentDestination;
+
+  bool _isFetchingDirections = false;
 
   @override
   void initState() {
     super.initState();
+    provider = Provider.of<LocationProvider>(context, listen: false);
+    _initAsync().then((_) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    });
+
     _initLocationTracking();
   }
 
-  // Initialize location tracking and listen for changes
+  Future<void> _initAsync() async {
+    try {
+      Position pos = await Geolocator.getCurrentPosition(
+        forceAndroidLocationManager: true,
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      latitude = pos.latitude;
+      longitude = pos.longitude;
+      myLocation = LatLng(latitude!, longitude!);
+
+      String city = await getCityFromCoordinates(latitude!, longitude!);
+      await provider.getNearbySantList(
+        data: {"city": city},
+        offSet: 0,
+        city: city,
+      );
+    } catch (e) {
+      log("Error initializing nearby list: $e");
+    }
+  }
+
   Future<void> _initLocationTracking() async {
     Position currentPosition = await getUserCurrentLocation();
-    setState(() {
-      latitude = currentPosition.latitude;
-      longitude = currentPosition.longitude;
-      myLocation = LatLng(latitude!, longitude!);
-      _controller?.animateCamera(CameraUpdate.newLatLngZoom(myLocation, 15));
-    });
+    latitude = currentPosition.latitude;
+    longitude = currentPosition.longitude;
+    myLocation = LatLng(latitude!, longitude!);
 
-    // Listen for location updates
-    Geolocator.getPositionStream().listen((Position newPosition) {
-      setState(() {
-        latitude = newPosition.latitude;
-        longitude = newPosition.longitude;
-        myLocation = LatLng(latitude!, longitude!);
+    if (_controller == null && _mapController.isCompleted) {
+      _controller = await _mapController.future;
+    }
 
-        _markers.removeWhere((m) => m.markerId.value == 'myLocation');
-      });
+    _controller?.animateCamera(CameraUpdate.newLatLngZoom(myLocation, 15));
 
-      // Only update route if journey started AND destination exists
-      if (isJourneyStarted && _currentDestination != null) {
-        // Don't clear polyline here, just update directions for live route
-        getDirections(myLocation, _currentDestination!);
-      } else {
-        if (!isJourneyStarted) {
+    Geolocator.getPositionStream().listen((Position newPosition) async {
+      if (mounted) {
+        setState(() {
+          latitude = newPosition.latitude;
+          longitude = newPosition.longitude;
+          myLocation = LatLng(latitude!, longitude!);
+          _markers.removeWhere((m) => m.markerId.value == 'myLocation');
+        });
+
+        if (isJourneyStarted &&
+            _currentDestination != null &&
+            !_isFetchingDirections) {
+          _isFetchingDirections = true;
+          await getDirections(myLocation, _currentDestination!);
+          _isFetchingDirections = false;
+        } else if (!isJourneyStarted) {
           _controller?.animateCamera(CameraUpdate.newLatLng(myLocation));
         }
       }
@@ -74,13 +116,39 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<Position> getUserCurrentLocation() async {
-    await Geolocator.requestPermission().then((value) {}).onError((
-      e,
-      stackTrace,
-    ) {
-      log(e.toString());
-    });
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      toastMessage("Location permission denied");
+      return Future.error("Location permission denied");
+    }
     return await Geolocator.getCurrentPosition();
+  }
+
+  Future<String> getCityFromCoordinates(double lat, double lng) async {
+    const String apiKey = 'AIzaSyBRfHrwA5qB4VynIyDqGIgx0NGJ0AJdtPM';
+    final url =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final results = data['results'] as List<dynamic>;
+      if (results.isNotEmpty) {
+        final components = results[0]['address_components'] as List<dynamic>;
+        var cityComp = components.firstWhere(
+          (c) => (c['types'] as List).contains('locality'),
+          orElse: () => null,
+        );
+        cityComp ??= components.firstWhere(
+          (c) => (c['types'] as List).contains('administrative_area_level_2'),
+          orElse: () => null,
+        );
+        return cityComp != null ? cityComp['long_name'] : '';
+      } else {
+        return '';
+      }
+    }
+    return '';
   }
 
   Future<void> getDirections(LatLng origin, LatLng destination) async {
@@ -88,25 +156,30 @@ class _SearchScreenState extends State<SearchScreen> {
     final String url =
         'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$apiKey';
     try {
+      log("Requesting directions: $url");
       final response = await http.get(Uri.parse(url));
+      log("Directions API status: ${response.statusCode}");
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final points = data['routes'][0]['overview_polyline']['points'];
-        final List<PointLatLng> result = _decodePoly(points);
-        final List<LatLng> polylineCoordinates = result
-            .map((point) => LatLng(point.latitude, point.longitude))
-            .toList();
-        setState(() {
-          _polylines.add(
-            Polyline(
-              polylineId: const PolylineId('route'),
-              visible: true,
-              points: polylineCoordinates,
-              width: 5,
-              color: Colors.blue,
-            ),
-          );
-        });
+        if ((data['routes'] as List).isNotEmpty) {
+          final points = data['routes'][0]['overview_polyline']['points'];
+          final List<PointLatLng> result = _decodePoly(points);
+          final List<LatLng> polylineCoordinates = result
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList();
+          setState(() {
+            _polylines.clear();
+            _polylines.add(
+              Polyline(
+                polylineId: const PolylineId('route'),
+                visible: true,
+                points: polylineCoordinates,
+                width: 5,
+                color: Colors.blue,
+              ),
+            );
+          });
+        }
       }
     } catch (e) {
       log('Direction API error: $e');
@@ -121,197 +194,210 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              const SizedBox(height: 50),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Keys.scaffoldKey.currentState?.openDrawer();
-                    },
-                    child: Icon(Icons.menu, size: 24, color: Colors.white),
-                  ),
-                  Image.asset(
-                    AppLogos.homeLogo,
-                    height: 50,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 24),
-                ],
-              ),
-              const SizedBox(height: 30),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: _searchTextField(),
-              ),
-              const SizedBox(height: 30),
-              Expanded(
-                child: RepaintBoundary(
-                  child: GoogleMap(
-                    onMapCreated: (c) => _controller = c,
-                    initialCameraPosition: CameraPosition(
-                      target: myLocation,
-                      zoom: 15,
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : AppScaffold(
+            body: Stack(
+              children: [
+                Column(
+                  children: [
+                    const SizedBox(height: 60),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            Keys.scaffoldKey.currentState?.openDrawer();
+                          },
+                          child: const Icon(
+                            Icons.menu,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Image.asset(
+                          AppLogos.homeLogo,
+                          height: 50,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 24),
+                      ],
                     ),
-                    zoomControlsEnabled: true,
-                    compassEnabled: true,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    markers: _markers.toSet(),
-                    circles: _circles,
-                    polylines: _polylines,
-                    onTap: (pos) {
-                      setState(() {
-                        _markers
-                          ..removeWhere((m) => m.markerId.value != 'myLocation')
-                          ..add(
-                            Marker(
-                              markerId: MarkerId(pos.toString()),
-                              position: pos,
-                            ),
-                          );
-                        _circles.clear();
-                      });
-
-                      if (_currentDestination == null ||
-                          _currentDestination != pos) {
-                        _polylines.clear();
-                        _currentDestination = pos;
-                        getDirections(myLocation, pos);
-                      }
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 60),
-            ],
-          ),
-
-          // Bottom Journey Button
-          Positioned(
-            bottom: 0,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    offset: Offset(0, -5),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(50),
-                  topRight: Radius.circular(50),
-                ),
-              ),
-              child: Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Check if a destination is selected
-                    if (_markers
-                        .where((m) => m.markerId.value != 'myLocation')
-                        .isEmpty) {
-                      // Show a bottom sheet to select the location
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => AddDirectionSearchBottomSheet(
-                          latitude: latitude,
-                          longitude: longitude,
-                          onPlaceSelected: (name, vicinity, lat, lng) {
-                            final position = LatLng(lat, lng);
+                    const SizedBox(height: 30),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: _searchTextField(),
+                    ),
+                    const SizedBox(height: 30),
+                    Expanded(
+                      child: RepaintBoundary(
+                        child: GoogleMap(
+                          onMapCreated: (controller) {
+                            _mapController.complete(controller);
+                            _controller = controller;
+                            _controller?.animateCamera(
+                              CameraUpdate.newLatLngZoom(myLocation, 15),
+                            );
+                          },
+                          initialCameraPosition: CameraPosition(
+                            target: myLocation,
+                            zoom: 15,
+                          ),
+                          zoomControlsEnabled: true,
+                          compassEnabled: true,
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: true,
+                          markers: _markers.toSet(),
+                          circles: _circles,
+                          polylines: _polylines,
+                          onTap: (pos) {
                             setState(() {
                               _markers
-                                ..clear()
+                                ..removeWhere(
+                                  (m) => m.markerId.value != 'myLocation',
+                                )
                                 ..add(
                                   Marker(
-                                    markerId: MarkerId(name),
-                                    position: position,
-                                    infoWindow: InfoWindow(
-                                      title: name,
-                                      snippet: vicinity,
-                                    ),
+                                    markerId: MarkerId(pos.toString()),
+                                    position: pos,
                                   ),
                                 );
+                              _circles.clear();
                             });
-                            _controller?.animateCamera(
-                              CameraUpdate.newLatLngZoom(position, 15),
-                            );
-                            // Show the route direction to the selected temple, without starting the journey
+
                             if (_currentDestination == null ||
-                                _currentDestination != position) {
+                                _currentDestination != pos) {
                               _polylines.clear();
-                              _currentDestination = position;
-                              getDirections(myLocation, position);
+                              _currentDestination = pos;
+                              getDirections(myLocation, pos);
                             }
                           },
                         ),
-                      );
-                    } else {
-                      // Start journey with selected destination
-                      final marker = _markers.firstWhere(
-                        (m) => m.markerId.value != 'myLocation',
-                      );
-                      final destination = marker.position;
-
-                      setState(() {
-                        if (isJourneyStarted) {
-                          isJourneyStarted = false;
-                          _polylines.clear();
-                          _markers.removeWhere(
-                            (m) => m.markerId.value != 'myLocation',
-                          );
-                          _currentDestination = null;
-                          toastMessage("Journey Ended Successfully");
-                        } else {
-                          isJourneyStarted = true;
-                          _currentDestination = destination;
-                          getDirections(myLocation, destination);
-                          toastMessage("Journey Started Successfully");
-                        }
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.appOrange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        isJourneyStarted
-                            ? 'Stop Journey'
-                            : 'Start Your Journey',
-                        style: AppFonts.outfitBlack.copyWith(
-                          color: Colors.white,
-                          fontSize: 18,
+                    const SizedBox(height: 60),
+                  ],
+                ),
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          offset: Offset(0, -5),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                        topRight: Radius.circular(50),
+                      ),
+                    ),
+                    child: Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_markers
+                              .where((m) => m.markerId.value != 'myLocation')
+                              .isEmpty) {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) =>
+                                  AddDirectionSearchBottomSheet(
+                                    latitude: latitude,
+                                    longitude: longitude,
+                                    onPlaceSelected:
+                                        (name, vicinity, lat, lng) {
+                                          final position = LatLng(lat, lng);
+                                          setState(() {
+                                            _markers
+                                              ..clear()
+                                              ..add(
+                                                Marker(
+                                                  markerId: MarkerId(name),
+                                                  position: position,
+                                                  infoWindow: InfoWindow(
+                                                    title: name,
+                                                    snippet: vicinity,
+                                                  ),
+                                                ),
+                                              );
+                                          });
+                                          _controller?.animateCamera(
+                                            CameraUpdate.newLatLngZoom(
+                                              position,
+                                              15,
+                                            ),
+                                          );
+                                          if (_currentDestination == null ||
+                                              _currentDestination != position) {
+                                            _polylines.clear();
+                                            _currentDestination = position;
+                                            getDirections(myLocation, position);
+                                          }
+                                        },
+                                  ),
+                            );
+                          } else {
+                            final marker = _markers.firstWhere(
+                              (m) => m.markerId.value != 'myLocation',
+                            );
+                            final destination = marker.position;
+
+                            setState(() {
+                              if (isJourneyStarted) {
+                                isJourneyStarted = false;
+                                _polylines.clear();
+                                _markers.removeWhere(
+                                  (m) => m.markerId.value != 'myLocation',
+                                );
+                                _currentDestination = null;
+                                toastMessage("Journey Ended Successfully");
+                              } else {
+                                isJourneyStarted = true;
+                                _currentDestination = destination;
+                                getDirections(myLocation, destination);
+                                toastMessage("Journey Started Successfully");
+                              }
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.appOrange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isJourneyStarted
+                                  ? 'Stop Journey'
+                                  : 'Start Your Journey',
+                              style: AppFonts.outfitBlack.copyWith(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.navigation_outlined, size: 18),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.navigation_outlined, size: 18),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
   }
 
   _searchTextField() => GestureDetector(
@@ -390,3 +476,5 @@ List<PointLatLng> _decodePoly(String polyline) {
 
   return points;
 }
+
+// const String apiKey = 'AIzaSyBRfHrwA5qB4VynIyDqGIgx0NGJ0AJdtPM';

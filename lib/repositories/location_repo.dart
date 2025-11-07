@@ -44,9 +44,16 @@ class LocationRepo extends BaseRepository {
     return json.decode(response.body);
   }
 
-  Future getNearbySantPI() async {
-    final response = await getHttp(
-      api: ApiUrls.baseUrl + LocationURLs.searchSantList,
+  Future getNearbySantPI(
+    Map<String, dynamic> data,
+    int offset,
+    String? city,
+  ) async {
+    String params = '?city=${city ?? ''}&limit=10&offset=$offset';
+
+    final response = await postHttp(
+      data: data,
+      api: ApiUrls.baseUrl + LocationURLs.searchSantList + params,
       token: true,
     );
     log(response.body, name: 'response getNearbySantPI');

@@ -3,7 +3,7 @@ class ApiUrls {
   // static String baseUrl = "http://192.168.29.238:8000/v1/";
 
   // STAGING
-  static String baseUrl = "http://13.204.46.173:9001/";
+  static String baseUrl = "http://3.109.209.179:9001/";
 }
 
 class UserAuthUrls {
