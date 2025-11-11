@@ -253,7 +253,7 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                       target: myLocation,
                       zoom: 15,
                     ),
-                    zoomControlsEnabled: false,
+                    zoomControlsEnabled: true,
                     compassEnabled: true,
                     myLocationEnabled: true,
                     myLocationButtonEnabled: true,
@@ -261,6 +261,7 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                     circles: _circles,
                     polylines: _polylines,
                     onTap: (pos) async {
+                      if (hasStartedJourney) return;
                       setState(() {
                         _markers
                           ..clear()
@@ -652,6 +653,7 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
           latitude: latitude,
           longitude: longitude,
           onPlaceSelected: (name, vicinity, lat, lng) {
+            if (hasStartedJourney) return;
             final position = LatLng(lat, lng);
             setState(() {
               _markers

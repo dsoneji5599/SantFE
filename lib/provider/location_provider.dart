@@ -128,11 +128,18 @@ class LocationProvider extends ChangeNotifier {
         city,
       );
 
+      nearbySantList.clear();
+
       if (responseData['status_code'] == 200) {
         nearbySantList = (responseData["data"] as List)
             .map((x) => NearbyLiveSantModel.fromJson(x))
             .toList();
 
+        notifyListeners();
+        return nearbySantList;
+      }
+
+      if (responseData['status_code'] == 404 || responseData['data'] == null) {
         notifyListeners();
         return nearbySantList;
       } else {

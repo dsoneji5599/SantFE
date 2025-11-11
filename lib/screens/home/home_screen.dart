@@ -72,7 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () async {
                 selectedSamajIds = tempSelectedIds.toList();
-                SharedPreferences prefs = await SharedPreferences.getInstance();
+                
+                final prefs = await SharedPreferences.getInstance();
                 await prefs.setStringList("selectedSamaj", selectedSamajIds);
 
                 Map<String, dynamic> body = {};

@@ -6,6 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:sant_app/models/sant_list_model.dart';
+import 'package:sant_app/provider/sant_provider.dart';
+import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
@@ -25,9 +29,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   XFile? _pickedImage;
   bool _isLoading = false;
-  bool _isLoadingUsers = true;
+  bool isLoadingUsers = true;
 
-  List<Map<String, dynamic>> _allUsers =
+  List<Map<String, dynamic>> allUsers =
       []; // will hold user docs with 'uid' and 'name'
   List<String> _selectedUserIds = [];
 
@@ -47,7 +51,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   Future<void> _fetchUsers() async {
     setState(() {
-      _isLoadingUsers = true;
+      isLoadingUsers = true;
     });
 
     try {
@@ -57,7 +61,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           .get();
       final currentUserId = FirebaseAuth.instance.currentUser?.uid;
       setState(() {
-        _allUsers = snapshot.docs
+        allUsers = snapshot.docs
             .where((doc) => doc.id != currentUserId)
             .map(
               (doc) => {
@@ -71,7 +75,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       log('Error fetching users: $e');
     } finally {
       setState(() {
-        _isLoadingUsers = false;
+        isLoadingUsers = false;
       });
     }
   }
@@ -157,86 +161,275 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
-  void _showSelectMembersDialog() {
+  void _showSelectMembersDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
-        // Use temporary copy to allow canceling changes
-        var tempSelected = List<String>.from(_selectedUserIds);
+        final santList = context.read<SantProvider>().santList;
+        List<SantListModel> filteredList = List.from(santList);
+        List<String> tempSelected = List.from(_selectedUserIds);
+        final TextEditingController searchController = TextEditingController();
 
         return StatefulBuilder(
-          builder: (context, setStateDialog) => AlertDialog(
-            title: const Text('Select Group Members'),
-            content: _allUsers.isEmpty
-                ? (_isLoadingUsers
-                      ? const SizedBox(
-                          height: 100,
-                          width: double.maxFinite,
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : const SizedBox(
-                          height: 100,
-                          width: double.maxFinite,
-                          child: Center(child: Text('No sant found')),
-                        ))
-                : SizedBox(
-                    width: double.maxFinite,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: _allUsers.map((user) {
-                          final isSelected = tempSelected.contains(user['uid']);
-                          return CheckboxListTile(
-                            value: isSelected,
-                            title: Text(user['name']),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            onChanged: (checked) {
-                              setStateDialog(() {
-                                if (checked == true) {
-                                  tempSelected.add(user['uid']);
-                                } else {
-                                  tempSelected.remove(user['uid']);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
+          builder: (context, setStateDialog) {
+            // Filter Sants by name, email, or mobile
+            void filterSants(String query) {
+              query = query.toLowerCase();
+              setStateDialog(() {
+                filteredList = santList.where((sant) {
+                  final name = sant.name?.toLowerCase() ?? '';
+                  final email = sant.email?.toLowerCase() ?? '';
+                  final mobile = sant.mobile?.toLowerCase() ?? '';
+                  return name.contains(query) ||
+                      email.contains(query) ||
+                      mobile.contains(query);
+                }).toList();
+              });
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 24,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                height: MediaQuery.of(context).size.height * 0.75,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Add Group member',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Search bar
+                    TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name, email or mobile...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.grey),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                        ),
+                      ),
+                      onChanged: filterSants,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Contacts header
+                    const Text(
+                      'Your Contacts',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 10),
 
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                    // List of sants
+                    Expanded(
+                      child: filteredList.isEmpty
+                          ? const Center(child: Text('No Sant found'))
+                          : ListView.builder(
+                              itemCount: filteredList.length,
+                              itemBuilder: (context, index) {
+                                final sant = filteredList[index];
+                                final isSelected = tempSelected.contains(
+                                  sant.firebaseUid ?? sant.saintId ?? '',
+                                );
+
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: (() {
+                                    final img =
+                                        sant.profileImage?.toString().trim() ??
+                                        '';
+
+                                    final isValidUrl =
+                                        img.startsWith('http://') ||
+                                        img.startsWith('https://');
+
+                                    if (isValidUrl) {
+                                      return CircleAvatar(
+                                        backgroundImage: NetworkImage(img),
+                                        radius: 24,
+                                      );
+                                    } else {
+                                      return Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey.shade200,
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          size: 26,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    }
+                                  })(),
+
+                                  title: Text(
+                                    sant.name ?? 'Unnamed',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    sant.email?.isNotEmpty == true
+                                        ? sant.email!
+                                        : sant.mobile ?? '',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  trailing: Checkbox(
+                                    value: isSelected,
+                                    activeColor: AppColors.appOrange,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    onChanged: (checked) {
+                                      setStateDialog(() {
+                                        final id =
+                                            sant.firebaseUid ??
+                                            sant.saintId ??
+                                            '';
+                                        if (checked == true) {
+                                          tempSelected.add(id);
+                                        } else {
+                                          tempSelected.remove(id);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      final id =
+                                          sant.firebaseUid ??
+                                          sant.saintId ??
+                                          '';
+                                      if (isSelected) {
+                                        tempSelected.remove(id);
+                                      } else {
+                                        tempSelected.add(id);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+
+                    // Footer
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      margin: const EdgeInsets.only(top: 8),
+                      decoration: const BoxDecoration(
+                        border: Border(top: BorderSide(color: Colors.black12)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Left side: count and text
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${tempSelected.length} member${tempSelected.length == 1 ? '' : 's'} selected',
+                                  style: TextStyle(
+                                    color: AppColors.appOrange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  "Do you want to add selected members into your group?",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Confirm button
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedUserIds = tempSelected;
+                                _membersController.text =
+                                    _getSelectedUserNamesFromSantList(context);
+                              });
+                              Navigator.pop(context);
+                            },
+                            icon: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.appOrange,
+                              ),
+                              padding: const EdgeInsets.all(10),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedUserIds = tempSelected;
-                    _membersController.text = _getSelectedUserNames();
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Select'),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  String _getSelectedUserNames() {
-    final names = _allUsers
-        .where((user) => _selectedUserIds.contains(user['uid']))
-        .map((user) {
-          final name = user['name']?.trim() ?? '';
-          return name.isEmpty ? 'Unnamed' : name;
-        })
+  String _getSelectedUserNamesFromSantList(BuildContext context) {
+    final santList = context.read<SantProvider>().santList;
+    final selectedNames = santList
+        .where(
+          (sant) =>
+              _selectedUserIds.contains(sant.firebaseUid ?? sant.saintId ?? ''),
+        )
+        .map((sant) => sant.name ?? 'Unnamed')
         .toList();
-    if (names.isEmpty) return 'Unnamed';
-    return names.join(', ');
+    return selectedNames.isNotEmpty ? selectedNames.join(', ') : 'Unnamed';
   }
 
   @override
@@ -350,7 +543,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     label: "Group Members",
                     hintText: 'Select group members',
                     readOnly: true,
-                    onTap: _showSelectMembersDialog,
+                    onTap: () => _showSelectMembersDialog(context),
                   ),
                   const SizedBox(height: 40),
                   _isLoading

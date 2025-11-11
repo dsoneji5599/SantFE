@@ -153,7 +153,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     _infoRow(
                                       image: AppIcons.phone,
                                       key: "Phone Number",
-                                      value: value?.name ?? "N/A",
+                                      value: value?.mobile ?? "N/A",
                                     ),
 
                                     // Email Field

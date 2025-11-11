@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/family_model.dart';
 import 'package:sant_app/provider/home_provider.dart';
+import 'package:sant_app/screens/home/add_family_member_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/widgets/app_drawer.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/keys.dart';
+import 'package:sant_app/widgets/app_navigator_animation.dart';
 
 class MyFamilyScreen extends StatefulWidget {
   const MyFamilyScreen({super.key});
@@ -39,18 +41,16 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         : AppScaffold(
             scaffoldKey: Keys.scaffoldKey,
-            drawer: AppDrawer(),
+            drawer: const AppDrawer(),
             body: Selector<HomeProvider, List<FamilyModel>>(
               selector: (context, provider) => provider.familyList,
               builder: (context, familyList, child) {
                 return Column(
                   children: [
-                    SizedBox(height: 60),
-
-                    // AppBar
+                    const SizedBox(height: 60),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -58,7 +58,7 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
                           onTap: () {
                             Keys.scaffoldKey.currentState?.openDrawer();
                           },
-                          child: Icon(
+                          child: const Icon(
                             Icons.menu,
                             size: 24,
                             color: Colors.white,
@@ -69,12 +69,50 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
                           height: 50,
                           color: Colors.white,
                         ),
-                        SizedBox(width: 24),
+                        const SizedBox(width: 24),
                       ],
                     ),
-
-                    SizedBox(height: 35),
-
+                    const SizedBox(height: 35),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: 200,
+                          child: InkWell(
+                            onTap: () {
+                              navigatorPush(
+                                context,
+                                const AddFamilyMemberScreen(),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white),
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.add_circle,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(
+                                      "Add Family Member",
+                                      style: AppFonts.outfitBlack,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
                     Expanded(
                       child: familyList.isEmpty
                           ? Center(
@@ -87,9 +125,9 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
                             )
                           : ListView.separated(
                               itemCount: familyList.length,
-                              padding: EdgeInsets.only(bottom: 20),
+                              padding: const EdgeInsets.only(bottom: 20),
                               separatorBuilder: (context, index) =>
-                                  SizedBox(height: 10),
+                                  const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final family = familyList[index];
                                 return FamilyCard(family: family);
@@ -112,8 +150,8 @@ class FamilyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 25),
-      padding: EdgeInsets.fromLTRB(25, 20, 20, 25),
+      margin: const EdgeInsets.symmetric(horizontal: 25),
+      padding: const EdgeInsets.fromLTRB(25, 20, 20, 25),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         color: Colors.white,
@@ -134,11 +172,11 @@ class FamilyCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Image.asset(AppIcons.samajIcon, height: 17),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
                     "Samaj: ",
                     style: AppFonts.outfitBlack.copyWith(fontSize: 16),
@@ -152,11 +190,11 @@ class FamilyCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Image.asset(AppIcons.sampradayIcon, height: 15),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
                     "Sampraday: ",
                     style: AppFonts.outfitBlack.copyWith(fontSize: 16),
@@ -179,7 +217,7 @@ class FamilyCard extends StatelessWidget {
               height: 60,
               width: 60,
               child: ClipRRect(
-                borderRadius: BorderRadiusGeometry.circular(50),
+                borderRadius: BorderRadius.circular(50),
                 child: CachedNetworkImage(
                   imageUrl: family.profileImage ?? 'N/A',
                   fit: BoxFit.cover,

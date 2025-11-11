@@ -215,43 +215,52 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
           // Input area
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: TextField(
-                              controller: _messageController,
-                              decoration: const InputDecoration(
-                                hintText: "Type here....",
-                                hintStyle: TextStyle(
-                                  color: Colors.black38,
-                                  fontSize: 15,
-                                ),
-                                border: InputBorder.none,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 25,
+            ).copyWith(top: 5),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            textInputAction: TextInputAction.send,
+                            decoration: const InputDecoration(
+                              hintText: "Type here...",
+                              hintStyle: TextStyle(
+                                color: Colors.black38,
+                                fontSize: 15,
                               ),
-                              onSubmitted: (_) => _sendMessage(),
+                              border: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 10,
+                              ),
                             ),
+                            onSubmitted: (_) => _sendMessage(),
                           ),
-                          IconButton(
-                            onPressed: _sendMessage,
-                            icon: const Icon(Icons.send, color: Colors.black87),
-                          ),
-                        ],
-                      ),
+                        ),
+                        IconButton(
+                          onPressed: _sendMessage,
+                          icon: const Icon(Icons.send, color: Colors.black87),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

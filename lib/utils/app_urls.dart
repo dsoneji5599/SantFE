@@ -43,7 +43,8 @@ class HomeUrls {
   static String getTemples = 'temple/get_temples';
   static String addTemples = 'temple/create_temple';
   static String editTemples = 'temple/edit_temple';
-  static String getFamily = 'temple/get_family_member';
+  static String getFamily = 'user_family/get_family_member';
+  static String addFamily = 'user_family/add_user_family_member';
 }
 
 class LocationURLs {

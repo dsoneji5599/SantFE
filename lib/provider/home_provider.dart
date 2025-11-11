@@ -72,6 +72,28 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> addFamily({required Map<String, dynamic> data}) async {
+    try {
+      Map<String, dynamic> responseData = await repo.addTempleAPI(data);
+      if (responseData['status_code'] == 201) {
+        toastMessage("Family Member Added Successfully.");
+        await getFamilyList();
+        notifyListeners();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'addFamily');
+        toastMessage("Failed Adding Family Member!");
+        await getFamilyList();
+        notifyListeners();
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "addFamily");
+      toastMessage("Failed Adding Family Member!");
+      return false;
+    }
+  }
+
   Future<bool> addTemple({required Map<String, dynamic> data}) async {
     try {
       Map<String, dynamic> responseData = await repo.addTempleAPI(data);

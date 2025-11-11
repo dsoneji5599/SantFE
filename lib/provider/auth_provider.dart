@@ -61,10 +61,10 @@ class AuthProvider extends ChangeNotifier {
         return true;
       } else {
         log(response['message'] ?? 'Failed login User');
-        toastMessage(
-          response['message'] ?? 'Failed login User',
-          isSuccess: false,
-        );
+        // toastMessage(
+        //   response['message'] ?? 'Failed login User',
+        //   isSuccess: false,
+        // );
         return false;
       }
     } catch (e, s) {
@@ -166,10 +166,10 @@ class AuthProvider extends ChangeNotifier {
         return true;
       } else {
         log(response['message'] ?? 'Failed login Sant');
-        toastMessage(
-          response['message'] ?? 'Failed login Sant',
-          isSuccess: false,
-        );
+        // toastMessage(
+        //   response['message'] ?? 'Failed login Sant',
+        //   isSuccess: false,
+        // );
         return false;
       }
     } catch (e, s) {
