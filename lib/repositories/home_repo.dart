@@ -63,6 +63,17 @@ class HomeRepo extends BaseRepository {
     return json.decode(response.body);
   }
 
+  Future deleteTempleAPI(String templeId) async {
+    String params = '?temple_id=$templeId';
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.deleteTemple + params,
+      data: {},
+      token: true,
+    );
+    log(response.body, name: 'response deleteTempleAPI');
+    return json.decode(response.body);
+  }
+
   Future addEventAPI(Map<String, dynamic> data) async {
     final response = await postHttp(
       api: ApiUrls.baseUrl + HomeUrls.addEvent,
@@ -81,6 +92,17 @@ class HomeRepo extends BaseRepository {
       token: true,
     );
     log(response.body, name: 'response editEventAPI');
+    return json.decode(response.body);
+  }
+
+  Future deleteEventAPI(String eventId) async {
+    String params = '?event_id=$eventId';
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.deleteEvent + params,
+      data: {},
+      token: true,
+    );
+    log(response.body, name: 'response deleteEventAPI');
     return json.decode(response.body);
   }
 }

@@ -186,75 +186,35 @@ class TempleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            spreadRadius: 2,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              InkWell(
-                onTap: () {
-                  navigatorPush(
-                    context,
-                    AddTempleScreen(
-                      isDetail: true,
-                      isEdit: false,
-                      description: temple.description,
-                      imagePath: temple.imagePath,
-                      templeName: temple.name,
-                      templeType: temple.type,
-                      templeId: temple.templeId ?? "N/A",
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image:
-                          (temple.imagePath != null &&
-                              temple.imagePath!.isNotEmpty)
-                          ? NetworkImage(temple.imagePath!)
-                          : AssetImage(AppImages.userSample) as ImageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
+    return Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                spreadRadius: 2,
+                offset: Offset(0, 2),
               ),
-              if (isMyTemple)
-                Positioned(
-                  bottom: -20,
-                  right: 10,
-                  left: 10,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      textStyle: TextStyle(fontSize: 12),
-                      backgroundColor: Colors.white,
-                      elevation: 4,
-                    ),
-                    onPressed: () {
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  InkWell(
+                    onTap: () {
                       navigatorPush(
                         context,
                         AddTempleScreen(
-                          isDetail: false,
-                          isEdit: true,
+                          isDetail: true,
+                          isEdit: false,
                           description: temple.description,
                           imagePath: temple.imagePath,
                           templeName: temple.name,
@@ -263,64 +223,151 @@ class TempleCard extends StatelessWidget {
                         ),
                       );
                     },
-                    child: Text("Edit", style: AppFonts.outfitBlack),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: InkWell(
-              onTap: () {
-                navigatorPush(
-                  context,
-                  AddTempleScreen(
-                    isDetail: true,
-                    isEdit: false,
-                    description: temple.description,
-                    imagePath: temple.imagePath,
-                    templeName: temple.name,
-                    templeType: temple.type,
-                    templeId: temple.templeId ?? "N/A",
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    temple.name ?? 'N/A',
-                    style: AppFonts.outfitBlack.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image:
+                              (temple.imagePath != null &&
+                                  temple.imagePath!.isNotEmpty)
+                              ? NetworkImage(temple.imagePath!)
+                              : AssetImage(AppImages.userSample)
+                                    as ImageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    temple.type ?? 'N/A',
-                    style: AppFonts.outfitBlack.copyWith(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                  if (isMyTemple)
+                    Positioned(
+                      bottom: -20,
+                      right: 10,
+                      left: 10,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          textStyle: TextStyle(fontSize: 12),
+                          backgroundColor: Colors.white,
+                          elevation: 4,
+                        ),
+                        onPressed: () {
+                          navigatorPush(
+                            context,
+                            AddTempleScreen(
+                              isDetail: false,
+                              isEdit: true,
+                              description: temple.description,
+                              imagePath: temple.imagePath,
+                              templeName: temple.name,
+                              templeType: temple.type,
+                              templeId: temple.templeId ?? "N/A",
+                            ),
+                          );
+                        },
+                        child: Text("Edit", style: AppFonts.outfitBlack),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    temple.description ?? 'No Description',
-                    style: AppFonts.outfitBlack.copyWith(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                      height: 1.3,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
+              SizedBox(width: 16),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    navigatorPush(
+                      context,
+                      AddTempleScreen(
+                        isDetail: true,
+                        isEdit: false,
+                        description: temple.description,
+                        imagePath: temple.imagePath,
+                        templeName: temple.name,
+                        templeType: temple.type,
+                        templeId: temple.templeId ?? "N/A",
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        temple.name ?? 'N/A',
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        temple.type ?? 'N/A',
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        temple.description ?? 'No Description',
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                          height: 1.3,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        if (isMyTemple)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: IconButton(
+              onPressed: () async {
+                final confirm = await showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text("Delete Temple"),
+                      content: Text(
+                        "Are you sure you want to delete this temple?",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                          child: Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                          },
+                          child: Text("Delete"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirm == true) {
+                  await context.read<HomeProvider>().deleteTemple(
+                    templeId: temple.templeId ?? "",
+                  );
+                }
+              },
+              icon: Icon(Icons.delete_forever_outlined, color: Colors.red),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

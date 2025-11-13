@@ -40,9 +40,11 @@ class HomeUrls {
   static String getEvents = 'event/get_events';
   static String addEvent = 'event/create_event';
   static String editEvent = 'event/edit_event';
+  static String deleteEvent = 'event/delete_event';
   static String getTemples = 'temple/get_temples';
   static String addTemples = 'temple/create_temple';
   static String editTemples = 'temple/edit_temple';
+  static String deleteTemple = 'temple/delete_temple';
   static String getFamily = 'user_family/get_family_member';
   static String addFamily = 'user_family/add_user_family_member';
 }

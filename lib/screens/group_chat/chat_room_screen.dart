@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
+import 'group_detail_screen.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String groupName;
@@ -22,6 +23,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  @override
+  void initState() {
+    super.initState();
+
+    final user = _auth.currentUser;
+    if (user != null) {
+      FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .update({'lastSeenBy.${user.uid}': FieldValue.serverTimestamp()});
+    }
+  }
+
   void _sendMessage() async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -29,19 +43,16 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    // 🔹 Get user name (check Firestore, then FirebaseAuth)
     final userDoc = await _firestore.collection('users').doc(user.uid).get();
     String? senderName =
         userDoc.data()?['name'] ??
         user.displayName ??
         user.email?.split('@').first;
 
-    // 🔹 If name is null or blank, use "Unnamed"
     if (senderName == null || senderName.trim().isEmpty) {
       senderName = "Unnamed";
     }
 
-    // 🔹 Add message to Firestore
     await _firestore
         .collection('groups')
         .doc(widget.groupId)
@@ -53,7 +64,144 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
+    await _firestore.collection('groups').doc(widget.groupId).update({
+      'lastSeenBy.${user.uid}': FieldValue.serverTimestamp(),
+    });
+
     _messageController.clear();
+  }
+
+  void _showGroupOptionsDialog() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final groupSnap = await _firestore
+        .collection('groups')
+        .doc(widget.groupId)
+        .get();
+    if (!groupSnap.exists) return;
+
+    final groupData = groupSnap.data()!;
+    final adminUid = groupData['adminId'];
+    final isAdmin = adminUid == user.uid;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: Text(widget.groupName),
+          children: [
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GroupDetailScreen(groupId: widget.groupId),
+                  ),
+                );
+              },
+              child: const ListTile(
+                leading: Icon(Icons.info_outline),
+                title: Text('Group info'),
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () {
+                Navigator.pop(context);
+                _handleLeavePressed(isAdmin);
+              },
+              child: ListTile(
+                leading: const Icon(Icons.exit_to_app),
+                title: Text(isAdmin ? 'Delete group' : 'Leave group'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLeavePressed(bool isAdmin) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    if (isAdmin) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete group'),
+          content: const Text('Are you sure you want to delete this group?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) await _deleteGroup();
+    } else {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Leave group'),
+          content: const Text('Are you sure you want to leave?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Leave'),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) await _leaveGroup();
+    }
+  }
+
+  Future<void> _leaveGroup() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final groupRef = _firestore.collection('groups').doc(widget.groupId);
+
+    await groupRef.update({
+      'members': FieldValue.arrayRemove([user.uid]),
+    });
+
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+
+  Future<void> _deleteGroup() async {
+    final groupRef = _firestore.collection('groups').doc(widget.groupId);
+    final messagesRef = groupRef.collection('messages');
+
+    const batchSize = 100;
+
+    Future<void> deleteBatch() async {
+      final snap = await messagesRef.limit(batchSize).get();
+      if (snap.docs.isEmpty) return;
+      final batch = _firestore.batch();
+      for (final doc in snap.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      if (snap.docs.length == batchSize) await deleteBatch();
+    }
+
+    await deleteBatch();
+    await groupRef.delete();
+
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   @override
@@ -87,9 +235,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    // navigatorPush(context, GroupDetailScreen());
-                  },
+                  onPressed: _showGroupOptionsDialog,
                   icon: const Icon(
                     Icons.more_vert,
                     color: Colors.white,

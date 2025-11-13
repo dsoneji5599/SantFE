@@ -228,13 +228,81 @@ class GroupCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          "Group chat",
-                          style: AppFonts.outfitBlack.copyWith(
-                            fontSize: 16,
-                            color: AppColors.appGrey.withValues(alpha: 0.5),
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('groups')
+                              .doc(groupId)
+                              .snapshots(),
+                          builder: (context, groupSnap) {
+                            final g = groupSnap.data?.data();
+
+                            final lastSeen =
+                                g?['lastSeenBy']?[FirebaseAuth
+                                    .instance
+                                    .currentUser!
+                                    .uid];
+                            Timestamp? lastMsgTs;
+
+                            return StreamBuilder(
+                              stream: FirebaseFirestore.instance
+                                  .collection('groups')
+                                  .doc(groupId)
+                                  .collection('messages')
+                                  .orderBy('timestamp', descending: true)
+                                  .limit(1)
+                                  .snapshots(),
+                              builder: (context, snap) {
+                                String lastMsg = "";
+                                bool hasUnread = false;
+
+                                if (snap.hasData &&
+                                    snap.data!.docs.isNotEmpty) {
+                                  final d = snap.data!.docs.first.data();
+                                  lastMsg = d['text'] ?? "";
+                                  lastMsgTs = d['timestamp'];
+
+                                  if (lastMsgTs != null) {
+                                    hasUnread =
+                                        lastSeen == null ||
+                                        lastSeen.toDate().isBefore(
+                                          lastMsgTs!.toDate(),
+                                        );
+                                  }
+                                }
+
+                                return Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        lastMsg.isNotEmpty
+                                            ? lastMsg
+                                            : "Group chat",
+                                        style: AppFonts.outfitBlack.copyWith(
+                                          fontSize: 16,
+                                          color: AppColors.appGrey.withValues(
+                                            alpha: hasUnread ? 1 : 0.5,
+                                          ),
+                                          fontWeight: hasUnread
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (hasUnread)
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.appOrange,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),

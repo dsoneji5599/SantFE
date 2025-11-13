@@ -357,6 +357,31 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     },
                   ),
 
+                  if (!widget.isUser)
+                    AppDropdown<String>(
+                      value:
+                          ['Male', 'Female', 'Other'].contains(selectedGender)
+                          ? selectedGender
+                          : null,
+                      label: "Gender",
+                      hintText: 'Select your Gender',
+                      isRequired: false,
+                      items: ['Male', 'Female', 'Other']
+                          .map(
+                            (gender) => DropdownMenuItem<String>(
+                              value: gender,
+                              child: Text(gender),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedGender = newValue;
+                          _genderController.text = newValue ?? '';
+                        });
+                      },
+                    ),
+
                   // Sampraday
                   if (!widget.isUser)
                     AppTextfield(
@@ -556,6 +581,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
     _dobController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _genderController.dispose();
     super.dispose();
   }
 }

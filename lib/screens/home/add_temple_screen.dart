@@ -254,10 +254,12 @@ class _AddTempleScreenState extends State<AddTempleScreen> {
 
                             // Temple Type Dropdown
                             AppDropdown<String>(
-                              value: selectedTempleType,
+                              value: templeTypes.contains(selectedTempleType)
+                                  ? selectedTempleType
+                                  : null,
                               label: "Temple Type",
                               hintText: 'Select temple type',
-                              isRequired: true,
+                              isRequired: false,
                               enabled: widget.isDetail == true ? false : true,
                               items: templeTypes
                                   .map(
@@ -345,8 +347,7 @@ class _AddTempleScreenState extends State<AddTempleScreen> {
                                     return;
                                   }
 
-                                  if (selectedTempleType == null ||
-                                      selectedTempleType!.isEmpty) {
+                                  if (selectedTempleType == null) {
                                     showToast('Please select temple type');
                                     return;
                                   }

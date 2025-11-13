@@ -141,6 +141,26 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteTemple({required String templeId}) async {
+    try {
+      Map<String, dynamic> responseData = await repo.deleteTempleAPI(templeId);
+      if (responseData['status_code'] == 200) {
+        toastMessage("Temple Deleted Successfully.");
+        await getTempleList(filterType: 'all');
+        await getTempleList(filterType: 'my');
+        return true;
+      } else {
+        log(responseData.toString(), name: 'deleteTemple');
+        toastMessage("Failed Deleting Temple!");
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "deleteTemple");
+      toastMessage("Failed Deleting Temple!");
+      return false;
+    }
+  }
+
   Future<bool> addEvent({required Map<String, dynamic> data}) async {
     try {
       Map<String, dynamic> responseData = await repo.addEventAPI(data);
@@ -185,6 +205,25 @@ class HomeProvider extends ChangeNotifier {
     } catch (e, s) {
       log("$e", stackTrace: s, name: "editEvent");
       toastMessage("Failed Updating Event!");
+      return false;
+    }
+  }
+
+  Future<bool> deleteEvent({required String eventId}) async {
+    try {
+      Map<String, dynamic> responseData = await repo.deleteEventAPI(eventId);
+      if (responseData['status_code'] == 200) {
+        toastMessage("Event Deleted Successfully.");
+        await getEventList();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'deleteEvent');
+        toastMessage("Failed Deleting Event!");
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "deleteEvent");
+      toastMessage("Failed Deleting Event!");
       return false;
     }
   }

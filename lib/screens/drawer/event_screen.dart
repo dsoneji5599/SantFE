@@ -53,7 +53,6 @@ class _EventScreenState extends State<EventScreen> {
                   children: [
                     SizedBox(height: 60),
 
-                    // AppBar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -128,12 +127,19 @@ class _EventScreenState extends State<EventScreen> {
                           ? Center(child: Text("No Events found"))
                           : ListView.separated(
                               itemCount: eventList.length,
-                              padding: EdgeInsets.only(bottom: 20),
+                              padding: EdgeInsets.only(
+                                bottom: 20,
+                                left: 20,
+                                right: 20,
+                              ),
                               separatorBuilder: (context, index) =>
                                   SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final event = eventList[index];
-                                return EventCard(event: event);
+                                return EventCard(
+                                  event: event,
+                                  isUser: isUser ?? true,
+                                );
                               },
                             ),
                     ),
@@ -147,75 +153,103 @@ class _EventScreenState extends State<EventScreen> {
 
 class EventCard extends StatelessWidget {
   final EventModel event;
-  final bool isMyEvent;
+  final bool isUser;
 
-  const EventCard({super.key, required this.event, this.isMyEvent = false});
+  const EventCard({super.key, required this.event, required this.isUser});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 25),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            spreadRadius: 2,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              InkWell(
-                onTap: () {
-                  navigatorPush(
-                    context,
-                    AddEventScreen(
-                      description: event.description,
-                      eventDate: event.eventDate?.toDDMMYYYY().toString(),
-                      eventName: event.name,
-                      imagePath: event.imagePath,
-                      isDetail: true,
-                      eventId: event.eventId ?? "N/A",
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image:
-                          (event.imagePath != null &&
-                              event.imagePath!.isNotEmpty)
-                          ? NetworkImage(event.imagePath!)
-                          : AssetImage(AppImages.userSample) as ImageProvider,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
+    return Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                spreadRadius: 2,
+                offset: Offset(0, 2),
               ),
-              Positioned(
-                bottom: -30,
-                right: 10,
-                left: 10,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    textStyle: TextStyle(fontSize: 12),
-                    backgroundColor: Colors.white,
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      navigatorPush(
+                        context,
+                        AddEventScreen(
+                          description: event.description,
+                          eventDate: event.eventDate?.toDDMMYYYY().toString(),
+                          eventName: event.name,
+                          imagePath: event.imagePath,
+                          isDetail: true,
+                          eventId: event.eventId ?? "N/A",
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image:
+                              (event.imagePath != null &&
+                                  event.imagePath!.isNotEmpty)
+                              ? NetworkImage(event.imagePath!)
+                              : AssetImage(AppImages.userSample)
+                                    as ImageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    log("Edit button clicked");
+
+                  if (!isUser)
+                    Positioned(
+                      bottom: -30,
+                      right: 10,
+                      left: 10,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          textStyle: TextStyle(fontSize: 12),
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          log("Edit button clicked");
+                          navigatorPush(
+                            context,
+                            AddEventScreen(
+                              description: event.description,
+                              eventDate: event.eventDate
+                                  ?.toDDMMYYYY()
+                                  .toString(),
+                              eventName: event.name,
+                              imagePath: event.imagePath,
+                              isDetail: false,
+                              isEdit: true,
+                              eventId: event.eventId ?? "N/A",
+                            ),
+                          );
+                        },
+                        child: Text("Edit", style: AppFonts.outfitBlack),
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
                     navigatorPush(
                       context,
                       AddEventScreen(
@@ -223,73 +257,95 @@ class EventCard extends StatelessWidget {
                         eventDate: event.eventDate?.toDDMMYYYY().toString(),
                         eventName: event.name,
                         imagePath: event.imagePath,
-                        isDetail: false,
-                        isEdit: true,
+                        isDetail: true,
                         eventId: event.eventId ?? "N/A",
                       ),
                     );
                   },
-                  child: Text("Edit", style: AppFonts.outfitBlack),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.name ?? 'N/A',
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.event, size: 16, color: Colors.orange),
+                          SizedBox(width: 6),
+                          Text(
+                            event.eventDate?.toDDMMYYYY().toString() ?? 'N/A',
+                            style: AppFonts.outfitBlack.copyWith(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        event.description ??
+                            'Satya narayan katch sanje 4 vage chalu tahse ane sathe rate jamva nu pn ...',
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(width: 16),
-          Expanded(
-            child: InkWell(
-              onTap: () {
-                navigatorPush(
-                  context,
-                  AddEventScreen(
-                    description: event.description,
-                    eventDate: event.eventDate?.toDDMMYYYY().toString(),
-                    eventName: event.name,
-                    imagePath: event.imagePath,
-                    isDetail: true,
-                    eventId: event.eventId ?? "N/A",
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.name ?? 'N/A',
-                    style: AppFonts.outfitBlack.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.event, size: 16, color: Colors.orange),
-                      SizedBox(width: 6),
-                      Text(
-                        event.eventDate?.toDDMMYYYY().toString() ?? 'N/A',
-                        style: AppFonts.outfitBlack.copyWith(fontSize: 16),
+        ),
+
+        if (!isUser)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: IconButton(
+              onPressed: () async {
+                final confirm = await showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text("Delete Event"),
+                      content: Text(
+                        "Are you sure you want to delete this event?",
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    event.description ??
-                        'Satya narayan katch sanje 4 vage chalu tahse ane sathe rate jamva nu pn ...',
-                    style: AppFonts.outfitBlack.copyWith(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                          child: Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                          },
+                          child: Text("Delete"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirm == true) {
+                  await context.read<HomeProvider>().deleteEvent(
+                    eventId: event.eventId ?? "",
+                  );
+                }
+              },
+              icon: Icon(Icons.delete_forever_outlined, color: Colors.red),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
