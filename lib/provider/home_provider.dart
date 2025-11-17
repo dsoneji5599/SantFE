@@ -74,7 +74,7 @@ class HomeProvider extends ChangeNotifier {
 
   Future<bool> addFamily({required Map<String, dynamic> data}) async {
     try {
-      Map<String, dynamic> responseData = await repo.addTempleAPI(data);
+      Map<String, dynamic> responseData = await repo.addFamilyMemberAPI(data);
       if (responseData['status_code'] == 201) {
         toastMessage("Family Member Added Successfully.");
         await getFamilyList();
@@ -83,7 +83,6 @@ class HomeProvider extends ChangeNotifier {
       } else {
         log(responseData.toString(), name: 'addFamily');
         toastMessage("Failed Adding Family Member!");
-        await getFamilyList();
         notifyListeners();
         return false;
       }

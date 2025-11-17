@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sant_app/app.dart';
 import 'package:sant_app/provider/profile_provider.dart';
 import 'package:sant_app/repositories/firebase_api.dart';
 import 'package:sant_app/screens/auth/onboarding_screen.dart';
@@ -71,155 +72,163 @@ class _AppDrawerState extends State<AppDrawer> {
     String? name,
     String? location,
   }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.appOrange, Colors.white, Colors.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        navigatorPushReplacement(context, App(isUser: isUser, myIndex: 5));
+      },
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.appOrange, Colors.white, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 150,
-          horizontal: 15,
-        ).copyWith(bottom: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              children: [
-                ListTile(
-                  title: Row(
-                    children: [
-                      SizedBox(
-                        height: 55,
-                        width: 55,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: CachedNetworkImage(
-                            imageUrl: profileImage ?? 'N/A',
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => SizedBox(
-                              width: double.infinity,
-                              child: Icon(
-                                Icons.person,
-                                size: 50,
-                                color: Colors.grey.shade300,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 150,
+            horizontal: 15,
+          ).copyWith(bottom: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                children: [
+                  ListTile(
+                    title: Row(
+                      children: [
+                        SizedBox(
+                          height: 55,
+                          width: 55,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: CachedNetworkImage(
+                              imageUrl: profileImage ?? 'N/A',
+                              fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => SizedBox(
+                                width: double.infinity,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 13),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name ?? "N/A",
-                            style: AppFonts.outfitBlack.copyWith(fontSize: 16),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.location_pin,
-                                size: 15,
-                                color: Colors.black54,
+                        SizedBox(width: 13),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name ?? "N/A",
+                              style: AppFonts.outfitBlack.copyWith(
+                                fontSize: 16,
                               ),
-                              Text(
-                                location ?? "N/A",
-                                style: AppFonts.outfitBlack.copyWith(
-                                  fontSize: 16,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_pin,
+                                  size: 15,
                                   color: Colors.black54,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                Text(
+                                  location ?? "N/A",
+                                  style: AppFonts.outfitBlack.copyWith(
+                                    fontSize: 16,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 50),
+                  if (isUser == false)
+                    ListTile(
+                      leading: Icon(
+                        Icons.navigation_outlined,
+                        color: AppColors.appOrange,
                       ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 50),
-                if (isUser == false)
-                  ListTile(
-                    leading: Icon(
-                      Icons.navigation_outlined,
-                      color: AppColors.appOrange,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppColors.appGrey.withValues(alpha: 0.5),
+                      ),
+                      title: Text('Add Direction'),
+                      onTap: () {
+                        Keys.scaffoldKey.currentState?.closeDrawer();
+                        navigatorPush(context, AddDirectionScreen());
+                      },
                     ),
+                  if (isUser == false)
+                    ListTile(
+                      leading: Icon(
+                        Icons.location_on_outlined,
+                        color: AppColors.appOrange,
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppColors.appGrey.withValues(alpha: 0.5),
+                      ),
+                      title: Text('Journey History'),
+                      onTap: () {
+                        Keys.scaffoldKey.currentState?.closeDrawer();
+                        navigatorPush(context, SantJourneyHistoryScreen());
+                      },
+                    ),
+                  ListTile(
+                    leading: Icon(Icons.event, color: AppColors.appOrange),
                     trailing: Icon(
                       Icons.arrow_forward_ios,
                       color: AppColors.appGrey.withValues(alpha: 0.5),
                     ),
-                    title: Text('Add Direction'),
+                    title: Text('Events'),
                     onTap: () {
                       Keys.scaffoldKey.currentState?.closeDrawer();
-                      navigatorPush(context, AddDirectionScreen());
+                      navigatorPush(context, EventScreen());
                     },
                   ),
-                if (isUser == false)
-                  ListTile(
-                    leading: Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.appOrange,
+                  if (isUser == false)
+                    ListTile(
+                      leading: Icon(
+                        Icons.chat_outlined,
+                        color: AppColors.appOrange,
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppColors.appGrey.withValues(alpha: 0.5),
+                      ),
+                      title: Text('Chat'),
+                      onTap: () {
+                        Keys.scaffoldKey.currentState?.closeDrawer();
+                        navigatorPush(context, ChatListScreen());
+                      },
                     ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.appGrey.withValues(alpha: 0.5),
-                    ),
-                    title: Text('Journey History'),
-                    onTap: () {
-                      Keys.scaffoldKey.currentState?.closeDrawer();
-                      navigatorPush(context, SantJourneyHistoryScreen());
-                    },
-                  ),
-                ListTile(
-                  leading: Icon(Icons.event, color: AppColors.appOrange),
-                  trailing: Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.appGrey.withValues(alpha: 0.5),
-                  ),
-                  title: Text('Events'),
-                  onTap: () {
-                    Keys.scaffoldKey.currentState?.closeDrawer();
-                    navigatorPush(context, EventScreen());
-                  },
-                ),
-                if (isUser == false)
-                  ListTile(
-                    leading: Icon(
-                      Icons.chat_outlined,
-                      color: AppColors.appOrange,
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.appGrey.withValues(alpha: 0.5),
-                    ),
-                    title: Text('Chat'),
-                    onTap: () {
-                      Keys.scaffoldKey.currentState?.closeDrawer();
-                      navigatorPush(context, ChatListScreen());
-                    },
-                  ),
-              ],
-            ),
-            ListTile(
-              leading: Icon(Icons.logout, color: AppColors.appOrange),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.appGrey.withValues(alpha: 0.5),
+                ],
               ),
-              title: Text('Sign Out'),
-              onTap: () {
-                signOut().then((value) {
-                  navigatorPushReplacement(context, OnboardingScreen());
-                });
-              },
-            ),
-          ],
+              ListTile(
+                leading: Icon(Icons.logout, color: AppColors.appOrange),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  color: AppColors.appGrey.withValues(alpha: 0.5),
+                ),
+                title: Text('Sign Out'),
+                onTap: () {
+                  signOut().then((value) {
+                    navigatorPushReplacement(context, OnboardingScreen());
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

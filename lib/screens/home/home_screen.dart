@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
+import 'package:sant_app/provider/location_provider.dart';
 import 'package:sant_app/provider/sant_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/screens/detail_screens/sant_detail_screen.dart';
@@ -25,7 +31,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late SantProvider provider;
   late UtilProvider utilProvider;
+  late LocationProvider locationProvider;
   bool isLoading = true;
+
+  double? latitude, longitude;
+  LatLng myLocation = const LatLng(23.0225, 72.5714);
 
   List<String> selectedSamajIds = [];
 
@@ -72,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () async {
                 selectedSamajIds = tempSelectedIds.toList();
-                
+
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setStringList("selectedSamaj", selectedSamajIds);
 
@@ -92,20 +102,71 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<String> getCityFromCoordinates(double lat, double lng) async {
+    const String apiKey = 'AIzaSyBRfHrwA5qB4VynIyDqGIgx0NGJ0AJdtPM';
+    final url =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final results = data['results'] as List<dynamic>;
+      if (results.isNotEmpty) {
+        final components = results[0]['address_components'] as List<dynamic>;
+        var cityComp = components.firstWhere(
+          (c) => (c['types'] as List).contains('locality'),
+          orElse: () => null,
+        );
+        cityComp ??= components.firstWhere(
+          (c) => (c['types'] as List).contains('administrative_area_level_2'),
+          orElse: () => null,
+        );
+        return cityComp != null ? cityComp['long_name'] : '';
+      } else {
+        return '';
+      }
+    }
+    return '';
+  }
+
   @override
   void initState() {
     super.initState();
     utilProvider = Provider.of<UtilProvider>(context, listen: false);
     provider = Provider.of<SantProvider>(context, listen: false);
+    locationProvider = Provider.of<LocationProvider>(context, listen: false);
 
     _initAsync().then((value) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       selectedSamajIds = prefs.getStringList("selectedSamaj") ?? [];
+
       Map<String, dynamic> body = {};
       if (selectedSamajIds.isNotEmpty) {
         body["samaj"] = selectedSamajIds;
       }
-      await provider.getSantList(data: body, offSet: 0);
+
+      String? city;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        // toastMessage("Location Permission is not allowed");
+      } else {
+        Position pos = await Geolocator.getCurrentPosition();
+        latitude = pos.latitude;
+        longitude = pos.longitude;
+
+        if (latitude != null && longitude != null) {
+          city = await getCityFromCoordinates(latitude!, longitude!);
+        }
+
+        await locationProvider.getNearbySantList(
+          data: {"city": city, ...body},
+          offSet: 0,
+          city: city ?? "",
+        );
+      }
+
       setState(() {
         isLoading = false;
       });

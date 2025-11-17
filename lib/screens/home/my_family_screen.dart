@@ -149,91 +149,99 @@ class FamilyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 25),
-      padding: const EdgeInsets.fromLTRB(25, 20, 20, 25),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 6, spreadRadius: 3),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                family.name ?? 'N/A',
-                style: AppFonts.outfitBlack.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return InkWell(
+      onTap: () {
+        navigatorPush(
+          context,
+          AddFamilyMemberScreen(isDetail: true, family: family),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 25),
+        padding: const EdgeInsets.fromLTRB(25, 20, 20, 25),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 6, spreadRadius: 3),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  family.name ?? 'N/A',
+                  style: AppFonts.outfitBlack.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Image.asset(AppIcons.samajIcon, height: 17),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Samaj: ",
-                    style: AppFonts.outfitBlack.copyWith(fontSize: 16),
-                  ),
-                  Text(
-                    family.name ?? 'N/A',
-                    style: AppFonts.outfitBlack.copyWith(
-                      color: AppColors.appGrey.withValues(alpha: 0.5),
-                      fontSize: 16,
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Image.asset(AppIcons.samajIcon, height: 17),
+                    const SizedBox(width: 10),
+                    Text(
+                      "Samaj: ",
+                      style: AppFonts.outfitBlack.copyWith(fontSize: 16),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Image.asset(AppIcons.sampradayIcon, height: 15),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Sampraday: ",
-                    style: AppFonts.outfitBlack.copyWith(fontSize: 16),
-                  ),
-                  Text(
-                    family.spouseName ?? 'N/A',
-                    style: AppFonts.outfitBlack.copyWith(
-                      color: AppColors.appGrey.withValues(alpha: 0.5),
-                      fontSize: 16,
+                    Text(
+                      family.gachh ?? 'N/A',
+                      style: AppFonts.outfitBlack.copyWith(
+                        color: AppColors.appGrey.withValues(alpha: 0.5),
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: SizedBox(
-              height: 60,
-              width: 60,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: CachedNetworkImage(
-                  imageUrl: family.profileImage ?? 'N/A',
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => SizedBox(
-                    width: double.infinity,
-                    child: Icon(
-                      Icons.person,
-                      size: 50,
-                      color: Colors.grey.shade300,
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Image.asset(AppIcons.sampradayIcon, height: 15),
+                    const SizedBox(width: 10),
+                    Text(
+                      "Sampraday: ",
+                      style: AppFonts.outfitBlack.copyWith(fontSize: 16),
+                    ),
+                    Text(
+                      family.gachh ?? 'N/A',
+                      style: AppFonts.outfitBlack.copyWith(
+                        color: AppColors.appGrey.withValues(alpha: 0.5),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SizedBox(
+                height: 60,
+                width: 60,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(50),
+                  child: CachedNetworkImage(
+                    imageUrl: family.profileImage ?? 'N/A',
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => SizedBox(
+                      width: double.infinity,
+                      child: Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.grey.shade300,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

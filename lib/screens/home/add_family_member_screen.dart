@@ -2,21 +2,35 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:sant_app/models/family_model.dart';
 import 'package:sant_app/provider/home_provider.dart';
+import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
+import 'package:sant_app/widgets/app_dropdown.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/app_textfield.dart';
 
 class AddFamilyMemberScreen extends StatefulWidget {
-  const AddFamilyMemberScreen({super.key});
+  final bool isDetail;
+  final bool isEdit;
+  final FamilyModel? family;
+
+  const AddFamilyMemberScreen({
+    super.key,
+    this.isDetail = false,
+    this.isEdit = false,
+    this.family,
+  });
 
   @override
   State<AddFamilyMemberScreen> createState() => _AddFamilyMemberScreenState();
 }
 
 class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _qualificationController =
@@ -31,14 +45,17 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   final TextEditingController _dateOfMarriageController =
       TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _districtController = TextEditingController();
-  final TextEditingController _stateController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController();
 
   XFile? _pickedImage;
   DateTime? _selectedDob;
   DateTime? _selectedMarriageDate;
+
+  String? selectedCity;
+  String? selectedDistrict;
+  String? selectedState;
+  String? selectedCountry;
+
+  late UtilProvider utilProvider;
 
   final List<_ChildForm> _children = [
     _ChildForm(
@@ -48,10 +65,65 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     ),
   ];
 
+  bool get isReadOnly => widget.isDetail == true;
+
   Future<void> _pickImage() async {
+    if (isReadOnly) return;
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) setState(() => _pickedImage = image);
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    utilProvider = Provider.of<UtilProvider>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await utilProvider.getCountry();
+      setState(() {});
+    });
+
+    if (widget.family != null) {
+      final f = widget.family!;
+
+      _nameController.text = f.name ?? '';
+      _dobController.text = (f.dob is DateTime)
+          ? _formatDate(f.dob as DateTime)
+          : (f.dob?.toString() ?? '');
+      _qualificationController.text = f.qualification ?? '';
+      _occupationController.text = f.occupation ?? '';
+      _natureOfBusinessController.text = f.natureOfBusiness ?? '';
+      _gacchController.text = f.gachh ?? '';
+      _fatherNameController.text = f.fatherName ?? '';
+      _motherNameController.text = f.motherName ?? '';
+      _spouseNameController.text = f.spouseName ?? '';
+      _dateOfMarriageController.text = (f.dom is DateTime)
+          ? _formatDate(f.dom as DateTime)
+          : (f.dom?.toString() ?? '');
+      _phoneController.text = f.mobile ?? '';
+      selectedCountry = f.country;
+      selectedState = f.state;
+      selectedCity = f.city;
+      selectedDistrict = f.district;
+
+      if (f.childrenDetails != null) {
+        _children.clear();
+        for (var c in f.childrenDetails!) {
+          _children.add(
+            _ChildForm(
+              name: TextEditingController(text: c["child_name"] ?? ''),
+              dob: TextEditingController(text: c["child_dob"] ?? ''),
+              gender: c["child_gender"] ?? "Male",
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -100,348 +172,453 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    [
-                          AppTextfield(
-                            controller: _nameController,
-                            label: "Name",
-                            hintText: 'Enter your name',
-                          ),
-                          Text(
-                            "Photo",
-                            style: AppFonts.outfitBlack.copyWith(fontSize: 16),
-                          ),
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: Container(
-                              height: 120,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.grey.shade100,
-                                image: _pickedImage != null
-                                    ? DecorationImage(
-                                        image: FileImage(
-                                          File(_pickedImage!.path),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:
+                      [
+                            AppTextfield(
+                              controller: _nameController,
+                              label: "Name",
+                              hintText: 'Enter your name',
+                              enabled: !isReadOnly,
+                            ),
+                            Text(
+                              "Photo",
+                              style: AppFonts.outfitBlack.copyWith(
+                                fontSize: 16,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: isReadOnly ? null : _pickImage,
+                              child: Container(
+                                height: 120,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey.shade100,
+                                  image: _pickedImage != null
+                                      ? DecorationImage(
+                                          image: FileImage(
+                                            File(_pickedImage!.path),
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child: _pickedImage == null
+                                    ? const Center(
+                                        child: Icon(
+                                          Icons.add_photo_alternate,
+                                          color: Colors.grey,
+                                          size: 40,
                                         ),
-                                        fit: BoxFit.cover,
                                       )
                                     : null,
                               ),
-                              child: _pickedImage == null
-                                  ? const Center(
-                                      child: Icon(
-                                        Icons.add_photo_alternate,
-                                        color: Colors.grey,
-                                        size: 40,
-                                      ),
-                                    )
-                                  : null,
                             ),
-                          ),
-                          AppTextfield(
-                            controller: _dobController,
-                            label: 'Date Of Birth',
-                            hintText: 'DD-MM-YYYY',
-                            readOnly: true,
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: _selectedDob ?? DateTime.now(),
-                                firstDate: DateTime(1900),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) {
-                                _selectedDob = picked;
-                                _dobController.text =
-                                    '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
-                              }
-                            },
-                          ),
-                          AppTextfield(
-                            controller: _qualificationController,
-                            label: "Qualification",
-                            hintText: 'Enter your qualification',
-                          ),
-                          AppTextfield(
-                            controller: _occupationController,
-                            label: "Occupation",
-                            hintText: 'Enter your occupation',
-                          ),
-                          AppTextfield(
-                            controller: _natureOfBusinessController,
-                            label: "Nature of Business",
-                            hintText: 'Enter Nature of your business',
-                          ),
-                          AppTextfield(
-                            controller: _gacchController,
-                            label: "Gacch",
-                            hintText: 'Enter Gacch',
-                          ),
-                          AppTextfield(
-                            controller: _fatherNameController,
-                            label: "Father's Name",
-                            hintText: 'Enter Father name',
-                          ),
-                          AppTextfield(
-                            controller: _motherNameController,
-                            label: "Mother's Name",
-                            hintText: 'Enter Mother name',
-                          ),
-                          AppTextfield(
-                            controller: _spouseNameController,
-                            label: "Spouse Name",
-                            hintText: 'Enter spouse name',
-                          ),
-                          AppTextfield(
-                            controller: _dateOfMarriageController,
-                            label: 'Date Of Marriage',
-                            hintText: 'DD-MM-YYYY',
-                            readOnly: true,
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate:
-                                    _selectedMarriageDate ?? DateTime.now(),
-                                firstDate: DateTime(1900),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) {
-                                _selectedMarriageDate = picked;
-                                _dateOfMarriageController.text =
-                                    '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
-                              }
-                            },
-                          ),
-
-                          // --------- Contact and address ---------
-                          AppTextfield(
-                            controller: _phoneController,
-                            label: "Phone Number",
-                            hintText: 'Enter phone number',
-                            textInputType: TextInputType.phone,
-                          ),
-                          AppTextfield(
-                            controller: _cityController,
-                            label: "City",
-                            hintText: 'Enter your city',
-                          ),
-                          AppTextfield(
-                            controller: _districtController,
-                            label: "District",
-                            hintText: 'Enter your district',
-                          ),
-                          AppTextfield(
-                            controller: _stateController,
-                            label: "State",
-                            hintText: 'Enter your state',
-                          ),
-                          AppTextfield(
-                            controller: _countryController,
-                            label: "Country",
-                            hintText: 'Enter your country',
-                          ),
-
-                          // --------- Children dynamic form ---------
-                          ...List.generate(_children.length, (i) {
-                            final child = _children[i];
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "Children Name",
-                                      style: AppFonts.outfitBlack.copyWith(
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    Text(
-                                      "(${i + 1})",
-                                      style: AppFonts.outfitBlack.copyWith(
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                AppTextfield(
-                                  controller: child.name,
-                                  hintText: 'Enter your child name',
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  "Select Gender",
-                                  style: AppFonts.outfitBlack.copyWith(
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    Radio<String>(
-                                      value: 'Male',
-                                      groupValue: child.gender,
-                                      onChanged: (v) => setState(
-                                        () => child.gender = v ?? 'Male',
-                                      ),
-                                    ),
-                                    const Text('Male'),
-                                    Radio<String>(
-                                      value: 'Female',
-                                      groupValue: child.gender,
-                                      onChanged: (v) => setState(
-                                        () => child.gender = v ?? 'Female',
-                                      ),
-                                    ),
-                                    const Text('Female'),
-                                  ],
-                                ),
-                                AppTextfield(
-                                  controller: child.dob,
-                                  label: 'Date Of Birth',
-                                  hintText: 'DD-MM-YYYY',
-                                  readOnly: true,
-                                  onTap: () async {
-                                    final picked = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(1900),
-                                      lastDate: DateTime.now(),
-                                    );
-                                    if (picked != null) {
-                                      child.dob.text =
-                                          '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
-                                    }
-                                  },
-                                ),
-                                const SizedBox(height: 5),
-                              ],
-                            );
-                          }),
-
-                          // --------- Add Family Member button (above Submit) ---------
-                          Center(
-                            child: InkWell(
-                              onTap: () {
+                            AppTextfield(
+                              controller: _dobController,
+                              label: 'Date Of Birth',
+                              hintText: 'YYYY-MM-DD',
+                              readOnly: true,
+                              enabled: !isReadOnly,
+                              onTap: () async {
+                                if (isReadOnly) return;
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDob ?? DateTime.now(),
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (picked != null) {
+                                  _selectedDob = picked;
+                                  _dobController.text =
+                                      '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                                }
+                              },
+                            ),
+                            AppTextfield(
+                              controller: _qualificationController,
+                              label: "Qualification",
+                              hintText: 'Enter your qualification',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _occupationController,
+                              label: "Occupation",
+                              hintText: 'Enter your occupation',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _natureOfBusinessController,
+                              label: "Nature of Business",
+                              hintText: 'Enter Nature of your business',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _gacchController,
+                              label: "Gacch",
+                              hintText: 'Enter Gacch',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _fatherNameController,
+                              label: "Father's Name",
+                              hintText: 'Enter Father name',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _motherNameController,
+                              label: "Mother's Name",
+                              hintText: 'Enter Mother name',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _spouseNameController,
+                              label: "Spouse Name",
+                              hintText: 'Enter spouse name',
+                              enabled: !isReadOnly,
+                            ),
+                            AppTextfield(
+                              controller: _dateOfMarriageController,
+                              label: 'Date Of Marriage',
+                              hintText: 'DD-MM-YYYY',
+                              readOnly: true,
+                              enabled: !isReadOnly,
+                              onTap: () async {
+                                if (isReadOnly) return;
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate:
+                                      _selectedMarriageDate ?? DateTime.now(),
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (picked != null) {
+                                  _selectedMarriageDate = picked;
+                                  _dateOfMarriageController.text =
+                                      '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                                }
+                              },
+                            ),
+                            AppTextfield(
+                              controller: _phoneController,
+                              label: "Phone Number",
+                              hintText: 'Enter phone number',
+                              textInputType: TextInputType.phone,
+                              enabled: !isReadOnly,
+                            ),
+                            AppDropdown<String>(
+                              value: selectedCountry,
+                              label: "Country",
+                              hintText: 'Select your Country',
+                              isRequired: false,
+                              enabled: !isReadOnly,
+                              items: utilProvider.countryList.map((country) {
+                                return DropdownMenuItem<String>(
+                                  value: country.countryId,
+                                  child: Text(country.country ?? ''),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) async {
+                                if (isReadOnly) return;
                                 setState(() {
-                                  _children.add(
-                                    _ChildForm(
-                                      name: TextEditingController(),
-                                      dob: TextEditingController(),
-                                      gender: 'Female',
-                                    ),
+                                  selectedCountry = newValue;
+                                  selectedState = null;
+                                  selectedCity = null;
+                                  selectedDistrict = null;
+                                });
+                                if (newValue != null) {
+                                  await utilProvider.getState(
+                                    countryId: newValue,
                                   );
+                                  setState(() {});
+                                }
+                              },
+                            ),
+                            AppDropdown<String>(
+                              value: selectedState,
+                              label: "State",
+                              hintText: 'Select your State',
+                              isRequired: false,
+                              enabled: !isReadOnly,
+                              items: utilProvider.stateList.map((state) {
+                                return DropdownMenuItem<String>(
+                                  value: state.stateId,
+                                  child: Text(state.state ?? ''),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) async {
+                                if (isReadOnly) return;
+                                setState(() {
+                                  selectedState = newValue;
+                                  selectedCity = null;
+                                  selectedDistrict = null;
+                                });
+                                if (newValue != null) {
+                                  await utilProvider.getCity(stateId: newValue);
+                                  setState(() {});
+                                }
+                              },
+                            ),
+                            AppDropdown<String>(
+                              value: selectedCity,
+                              label: "City",
+                              hintText: 'Select your City',
+                              isRequired: false,
+                              enabled: !isReadOnly,
+                              items: utilProvider.cityList.map((city) {
+                                return DropdownMenuItem<String>(
+                                  value: city.cityId,
+                                  child: Text(city.city ?? ''),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) async {
+                                if (isReadOnly) return;
+                                setState(() {
+                                  selectedCity = newValue;
+                                  selectedDistrict = null;
+                                });
+                                if (newValue != null) {
+                                  await utilProvider.getDistrict(
+                                    cityId: newValue,
+                                  );
+                                  setState(() {});
+                                }
+                              },
+                            ),
+                            AppDropdown<String>(
+                              value: selectedDistrict,
+                              label: "District",
+                              hintText: 'Select your District',
+                              isRequired: false,
+                              enabled: !isReadOnly,
+                              items: utilProvider.districtList.map((district) {
+                                return DropdownMenuItem<String>(
+                                  value: district.districtId,
+                                  child: Text(district.district ?? ''),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                if (isReadOnly) return;
+                                setState(() {
+                                  selectedDistrict = newValue;
                                 });
                               },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                            ),
+                            ...List.generate(_children.length, (i) {
+                              final child = _children[i];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
-                                    Icons.add_circle_outline,
-                                    color: Colors.black,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "Children Name",
+                                        style: AppFonts.outfitBlack.copyWith(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        "(${i + 1})",
+                                        style: AppFonts.outfitBlack.copyWith(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(height: 8),
+                                  AppTextfield(
+                                    controller: child.name,
+                                    hintText: 'Enter your child name',
+                                    enabled: !isReadOnly,
+                                  ),
+                                  const SizedBox(height: 12),
                                   Text(
-                                    "Add Family Member",
+                                    "Select Gender",
                                     style: AppFonts.outfitBlack.copyWith(
                                       fontSize: 16,
                                     ),
                                   ),
+                                  Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: 'Male',
+                                        groupValue: child.gender,
+                                        onChanged: isReadOnly
+                                            ? null
+                                            : (v) => setState(
+                                                () =>
+                                                    child.gender = v ?? 'Male',
+                                              ),
+                                      ),
+                                      const Text('Male'),
+                                      Radio<String>(
+                                        value: 'Female',
+                                        groupValue: child.gender,
+                                        onChanged: isReadOnly
+                                            ? null
+                                            : (v) => setState(
+                                                () => child.gender =
+                                                    v ?? 'Female',
+                                              ),
+                                      ),
+                                      const Text('Female'),
+                                    ],
+                                  ),
+                                  AppTextfield(
+                                    controller: child.dob,
+                                    label: 'Date Of Birth',
+                                    hintText: 'DD-MM-YYYY',
+                                    readOnly: true,
+                                    enabled: !isReadOnly,
+                                    onTap: () async {
+                                      if (isReadOnly) return;
+                                      final picked = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now(),
+                                        firstDate: DateTime(1900),
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (picked != null) {
+                                        child.dob.text =
+                                            '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(height: 5),
                                 ],
+                              );
+                            }),
+                            if (!isReadOnly)
+                              Center(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _children.add(
+                                        _ChildForm(
+                                          name: TextEditingController(),
+                                          dob: TextEditingController(),
+                                          gender: 'Female',
+                                        ),
+                                      );
+                                    });
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.add_circle_outline,
+                                        color: Colors.black,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "Add Family Member",
+                                        style: AppFonts.outfitBlack.copyWith(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            const SizedBox(height: 5),
+                            if (!isReadOnly)
+                              AppButton(
+                                text: "Submit",
+                                onTap: () async {
+                                  if (!_formKey.currentState!.validate()) {
+                                    toastMessage(
+                                      "Please fill all required fields!",
+                                    );
+                                    return;
+                                  }
 
-                          const SizedBox(height: 5),
+                                  if (_pickedImage == null &&
+                                      widget.family == null) {
+                                    toastMessage("Please select an image!");
+                                    return;
+                                  }
 
-                          AppButton(
-                            text: "Submit",
-                            onTap: () async {
-                              if (_nameController.text.isEmpty ||
-                                  _dobController.text.isEmpty ||
-                                  _qualificationController.text.isEmpty ||
-                                  _occupationController.text.isEmpty ||
-                                  _natureOfBusinessController.text.isEmpty ||
-                                  _gacchController.text.isEmpty ||
-                                  _fatherNameController.text.isEmpty ||
-                                  _motherNameController.text.isEmpty ||
-                                  _spouseNameController.text.isEmpty ||
-                                  _dateOfMarriageController.text.isEmpty ||
-                                  _phoneController.text.isEmpty ||
-                                  _cityController.text.isEmpty ||
-                                  _districtController.text.isEmpty ||
-                                  _stateController.text.isEmpty ||
-                                  _countryController.text.isEmpty ||
-                                  _pickedImage == null) {
-                                toastMessage(
-                                  "Please fill all required fields!",
-                                );
-                                return;
-                              }
+                                  for (var c in _children) {
+                                    if (c.name.text.isEmpty ||
+                                        c.dob.text.isEmpty) {
+                                      toastMessage(
+                                        "Please fill all children details",
+                                      );
+                                      return;
+                                    }
+                                  }
 
-                              for (var c in _children) {
-                                if (c.name.text.isEmpty || c.dob.text.isEmpty) {
-                                  toastMessage(
-                                    "Please fill all children details",
+                                  final provider = Provider.of<HomeProvider>(
+                                    context,
+                                    listen: false,
                                   );
-                                  return;
-                                }
-                              }
 
-                              final provider = Provider.of<HomeProvider>(
-                                context,
-                                listen: false,
-                              );
+                                  List<Map<String, dynamic>> childrenData =
+                                      _children.map((c) {
+                                        return {
+                                          "child_name": c.name.text,
+                                          "child_gender": c.gender,
+                                          "child_dob": c.dob.text,
+                                        };
+                                      }).toList();
 
-                              List<Map<String, dynamic>> childrenData =
-                                  _children.map((c) {
-                                    return {
-                                      "child_name": c.name.text,
-                                      "child_gender": c.gender,
-                                      "child_dob": c.dob.text,
-                                    };
-                                  }).toList();
+                                  String formattedDob = "";
+                                  if (_selectedDob != null) {
+                                    formattedDob =
+                                        "${_selectedDob!.year.toString().padLeft(4, '0')}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.day.toString().padLeft(2, '0')}";
+                                  }
 
-                              Map<String, dynamic> data = {
-                                "name": _nameController.text,
-                                "dob": _dobController.text,
-                                "qualification": _qualificationController.text,
-                                "occupation": _occupationController.text,
-                                "nature_of_business":
-                                    _natureOfBusinessController.text,
-                                "gacch": _gacchController.text,
-                                "father_name": _fatherNameController.text,
-                                "mother_name": _motherNameController.text,
-                                "spouse_name": _spouseNameController.text,
-                                "date_of_marriage":
-                                    _dateOfMarriageController.text,
-                                "phone": _phoneController.text,
-                                "city": _cityController.text,
-                                "district": _districtController.text,
-                                "state": _stateController.text,
-                                "country": _countryController.text,
-                                "children": childrenData,
-                              };
+                                  String formattedDom = "";
+                                  if (_selectedMarriageDate != null) {
+                                    formattedDom =
+                                        "${_selectedMarriageDate!.year.toString().padLeft(4, '0')}-${_selectedMarriageDate!.month.toString().padLeft(2, '0')}-${_selectedMarriageDate!.day.toString().padLeft(2, '0')}";
+                                  }
 
-                              bool success = await provider.addFamily(
-                                data: data,
-                              );
-                              if (success) Navigator.pop(context);
-                            },
-                          ),
-                        ]
-                        .map(
-                          (w) => Padding(
-                            padding: const EdgeInsets.only(bottom: 18),
-                            child: w,
-                          ),
-                        )
-                        .toList(),
+                                  Map<String, dynamic> data = {
+                                    "name": _nameController.text,
+                                    "dob": formattedDob,
+                                    "qualification":
+                                        _qualificationController.text,
+                                    "occupation": _occupationController.text,
+                                    "nature_of_business":
+                                        _natureOfBusinessController.text,
+                                    "gachh": _gacchController.text,
+                                    "father_name": _fatherNameController.text,
+                                    "mother_name": _motherNameController.text,
+                                    "spouse_name": _spouseNameController.text,
+                                    "dom": formattedDom,
+                                    "phone": _phoneController.text,
+                                    "city": selectedCity,
+                                    "district": selectedDistrict,
+                                    "state": selectedState,
+                                    "country": selectedCountry,
+                                    "children_details": childrenData,
+                                  };
+
+                                  bool success = await provider.addFamily(
+                                    data: data,
+                                  );
+                                  if (success) Navigator.pop(context);
+                                },
+                              ),
+                          ]
+                          .map(
+                            (w) => Padding(
+                              padding: const EdgeInsets.only(bottom: 18),
+                              child: w,
+                            ),
+                          )
+                          .toList(),
+                ),
               ),
             ),
           ],

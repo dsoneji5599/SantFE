@@ -144,6 +144,12 @@ class _SearchScreenState extends State<SearchScreen> {
   List<String> selectedSamajIds = [];
 
   Future<void> _initAsync() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      toastMessage("Location Permission is not allowed");
+    }
     try {
       Position pos = await Geolocator.getCurrentPosition(
         forceAndroidLocationManager: true,
@@ -277,7 +283,8 @@ class _SearchScreenState extends State<SearchScreen> {
           await getDirections(myLocation, _currentDestination!);
           _isFetchingDirections = false;
         } else if (!isJourneyStarted) {
-          _controller?.animateCamera(CameraUpdate.newLatLng(myLocation));
+          return;
+        // _controller?.animateCamera(CameraUpdate.newLatLng(myLocation));
         }
       }
     });
@@ -287,8 +294,10 @@ class _SearchScreenState extends State<SearchScreen> {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      toastMessage("Location permission denied");
-      return Future.error("Location permission denied");
+      toastMessage("Location Permission is not allowed");
+      return Future.error(
+        "Location permission is not allowed. Please enable it from Settings.",
+      );
     }
     return await Geolocator.getCurrentPosition();
   }
@@ -595,6 +604,14 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return isLoading
         ? Center(child: CircularProgressIndicator())
+        : (latitude == null || longitude == null)
+        ? Center(
+            child: Text(
+              "Location permission is not allowed. Please enable it from Settings.",
+              style: AppFonts.outfitBlack.copyWith(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+          )
         : AppScaffold(
             scaffoldKey: Keys.scaffoldKey,
             drawer: AppDrawer(),
@@ -645,9 +662,9 @@ class _SearchScreenState extends State<SearchScreen> {
                           onMapCreated: (controller) {
                             _mapController.complete(controller);
                             _controller = controller;
-                            _controller?.animateCamera(
-                              CameraUpdate.newLatLngZoom(myLocation, 15),
-                            );
+                            // _controller?.animateCamera(
+                            //   CameraUpdate.newLatLngZoom(myLocation, 15),
+                            // );
                           },
                           initialCameraPosition: CameraPosition(
                             target: myLocation,
@@ -816,9 +833,9 @@ class _SearchScreenState extends State<SearchScreen> {
               );
             });
 
-            _controller?.animateCamera(
-              CameraUpdate.newLatLngZoom(position, 15),
-            );
+            // _controller?.animateCamera(
+            //   CameraUpdate.newLatLngZoom(position, 15),
+            // );
             getDirections(myLocation, position);
           },
         ),

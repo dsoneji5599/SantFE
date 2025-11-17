@@ -1,6 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
+import 'package:sant_app/provider/location_provider.dart';
+import 'package:sant_app/screens/detail_screens/journey_history_detail.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/themes/app_fonts.dart';
@@ -14,6 +17,10 @@ class SantDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLive = context.read<LocationProvider>().nearbySantList.any(
+      (e) => e.saintDetail.saintId == sant.saintId,
+    );
+
     return AppScaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -189,20 +196,51 @@ class SantDetailScreen extends StatelessWidget {
                             .toList(),
                   ),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          "VIEW LOCATION",
-                          style: AppFonts.outfitBlack.copyWith(
-                            color: AppColors.black.withValues(alpha: 0.5),
+                  if (isLive)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            final liveSant = context
+                                .read<LocationProvider>()
+                                .nearbySantList
+                                .firstWhere(
+                                  (e) => e.saintDetail.saintId == sant.saintId,
+                                );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => JourneyHistoryDetailScreen(
+                                  startLatitude:
+                                      liveSant.journeyDetail.startLatitude,
+                                  startLongitude:
+                                      liveSant.journeyDetail.startLongitude,
+                                  endLatitude:
+                                      liveSant.journeyDetail.endLatitude,
+                                  endLongitude:
+                                      liveSant.journeyDetail.endLongitude,
+                                  startLocationName:
+                                      liveSant.journeyDetail.currentCity,
+                                  endLocationName:
+                                      liveSant.journeyDetail.currentCity,
+                                  startDate: liveSant.journeyDetail.startDate,
+                                  endDate: liveSant.journeyDetail.endDate ?? "",
+                                ),
+                              ),
+                            );
+                          },
+
+                          child: Text(
+                            "VIEW LOCATION",
+                            style: AppFonts.outfitBlack.copyWith(
+                              color: AppColors.black.withValues(alpha: 0.5),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
             ),

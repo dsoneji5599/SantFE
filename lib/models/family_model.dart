@@ -14,7 +14,7 @@ class FamilyModel {
   final dynamic dom;
   final String? gender;
   final dynamic children;
-  final dynamic childrenDetails;
+  final List<Map<String, dynamic>>? childrenDetails;
   final String? mobile;
   final String? district;
   final String? city;
@@ -58,10 +58,20 @@ class FamilyModel {
     fatherName: json["father_name"],
     motherName: json["mother_name"],
     spouseName: json["spouse_name"],
-    dom: json["dom"],
+    dom: json["dom"] == null ? null : DateTime.parse(json["dom"]),
     gender: json["gender"],
     children: json["children"],
-    childrenDetails: json["children_details"],
+    childrenDetails: json["children_details"] == null
+        ? null
+        : List<Map<String, dynamic>>.from(
+            json["children_details"].map(
+              (x) => {
+                "child_dob": x["child_dob"],
+                "child_name": x["child_name"],
+                "child_gender": x["child_gender"],
+              },
+            ),
+          ),
     mobile: json["mobile"],
     district: json["district"],
     city: json["city"],

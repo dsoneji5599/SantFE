@@ -35,7 +35,9 @@ class HomeRepo extends BaseRepository {
   Future addFamilyMemberAPI(Map<String, dynamic> data) async {
     final response = await postHttp(
       api: ApiUrls.baseUrl + HomeUrls.addFamily,
-      data: data,
+      data: {
+        "members": [data],
+      },
       token: true,
     );
     log(response.body, name: 'response addFamilyMemberAPI');

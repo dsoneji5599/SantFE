@@ -12,6 +12,7 @@ class AppButton extends StatelessWidget {
     this.padding,
     this.textStyle,
     this.icon,
+    this.isLoading = false,
   });
 
   final String text;
@@ -21,41 +22,44 @@ class AppButton extends StatelessWidget {
   final EdgeInsets? padding;
   final TextStyle? textStyle;
   final Widget? icon;
+  final bool? isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: padding ?? EdgeInsets.all(14),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.appOrange.withValues(alpha: 0.9),
-              AppColors.appOrange.withValues(alpha: 0.8),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style:
-                  textStyle ??
-                  AppFonts.outfitBlack.copyWith(
-                    color: textColor ?? Colors.white,
+    return isLoading == true
+        ? Center(child: CircularProgressIndicator(color: AppColors.appOrange))
+        : InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: padding ?? EdgeInsets.all(14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.appOrange.withValues(alpha: 0.9),
+                    AppColors.appOrange.withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    text,
+                    style:
+                        textStyle ??
+                        AppFonts.outfitBlack.copyWith(
+                          color: textColor ?? Colors.white,
+                        ),
                   ),
+                  if (icon != null) SizedBox(width: 8),
+                  if (icon != null) icon!,
+                ],
+              ),
             ),
-            if (icon != null) SizedBox(width: 8),
-            if (icon != null) icon!,
-          ],
-        ),
-      ),
-    );
+          );
   }
 }
