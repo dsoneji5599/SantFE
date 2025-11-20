@@ -10,7 +10,6 @@ import 'package:sant_app/provider/auth_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
-import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
 import 'package:sant_app/widgets/app_dropdown.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
@@ -111,7 +110,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     },
                     icon: Icon(
                       Icons.arrow_back_ios_new,
-                      color: Colors.black87,
+                      color: Colors.white,
                       size: 20,
                     ),
                   ),
@@ -119,7 +118,7 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                     "Update Profile",
                     style: AppFonts.outfitBlack.copyWith(
                       fontSize: 20,
-                      color: Colors.black87,
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(width: 40),
@@ -561,8 +560,6 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                             App(isUser: widget.isUser),
                           );
                         }
-                      } else {
-                        toastMessage('Register failed. Please try again.');
                       }
                     },
                   ),

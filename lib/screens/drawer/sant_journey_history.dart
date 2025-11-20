@@ -10,6 +10,7 @@ import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/utils/extensions.dart';
+import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 
@@ -206,19 +207,23 @@ class _JourneyHistoryCardState extends State<JourneyHistoryCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        navigatorPush(
-          context,
-          JourneyHistoryDetailScreen(
-            startLatitude: widget.history.startLatitude ?? 00,
-            startLongitude: widget.history.startLongitude ?? 00,
-            endLatitude: widget.history.endLatitude ?? 00,
-            endLongitude: widget.history.endLongitude ?? 00,
-            startLocationName: _locationName,
-            endLocationName: _locationNameEnd,
-            startDate: widget.history.startDate!.toDDMMYYYYDash(),
-            endDate: widget.history.endDate!.toDDMMYYYYDash(),
-          ),
-        );
+        if (widget.history.endDate == null) {
+          toastMessage("Complete the journey to see history");
+        } else {
+          navigatorPush(
+            context,
+            JourneyHistoryDetailScreen(
+              startLatitude: widget.history.startLatitude ?? 00,
+              startLongitude: widget.history.startLongitude ?? 00,
+              endLatitude: widget.history.endLatitude ?? 00,
+              endLongitude: widget.history.endLongitude ?? 00,
+              startLocationName: _locationName,
+              endLocationName: _locationNameEnd,
+              startDate: widget.history.startDate!.toDDMMYYYYDash(),
+              endDate: widget.history.endDate!.toDDMMYYYYDash(),
+            ),
+          );
+        }
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 25),
@@ -240,7 +245,7 @@ class _JourneyHistoryCardState extends State<JourneyHistoryCard> {
             child: Align(
               alignment: Alignment.center,
               child: SizedBox(
-                width: 200,
+                width: 160,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -251,7 +256,7 @@ class _JourneyHistoryCardState extends State<JourneyHistoryCard> {
                       child: Text(
                         _locationNameEnd ?? "N/A",
                         style: AppFonts.outfitBlack.copyWith(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,

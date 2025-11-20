@@ -18,82 +18,86 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      body: Column(
-        children: [
-          SizedBox(height: 50),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 50),
 
-          SizedBox(height: 100),
+            SizedBox(height: 100),
 
-          // Logo
-          CircleAvatar(
-            radius: 144,
-            backgroundColor: Color(0xFFF3821E),
-            child: Image(
-              image: AssetImage(AppLogos.appLogo),
-              height: 171,
-              width: 140,
-              fit: BoxFit.fill,
+            // Logo
+            CircleAvatar(
+              radius: 144,
+              backgroundColor: Color(0xFFF3821E),
+              child: Image(
+                image: AssetImage(AppLogos.appLogo),
+                height: 171,
+                width: 140,
+                fit: BoxFit.fill,
+              ),
             ),
-          ),
 
-          SizedBox(height: 60),
+            SizedBox(height: 60),
 
-          // Sign In as User Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: AppButton(
-              onTap: () {
-                navigatorPush(context, LoginScreen(isUser: true));
-              },
-              text: 'Sign In as User',
+            // Sign In as User Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: AppButton(
+                onTap: () {
+                  navigatorPush(context, LoginScreen(isUser: true));
+                },
+                text: 'Sign In as User',
+              ),
             ),
-          ),
 
-          SizedBox(height: 33),
+            SizedBox(height: 33),
 
-          // Divider
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: AppColors.black.withValues(alpha: 0.5),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    "Or",
-                    style: AppFonts.outfitBlack.copyWith(
+            // Divider
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
                       color: AppColors.black.withValues(alpha: 0.5),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Divider(
-                    thickness: 1,
-                    color: AppColors.black.withValues(alpha: 0.5),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      "Or",
+                      style: AppFonts.outfitBlack.copyWith(
+                        color: AppColors.black.withValues(alpha: 0.5),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: AppColors.black.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          SizedBox(height: 33),
+            SizedBox(height: 33),
 
-          // Sign In as Sant Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: AppButton(
-              onTap: () {
-                navigatorPush(context, LoginScreen(isUser: false));
-              },
-              text: 'Sign In as Sant',
+            // Sign In as Sant Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: AppButton(
+                onTap: () {
+                  navigatorPush(context, LoginScreen(isUser: false));
+                },
+                text: 'Sign In as Sant',
+              ),
             ),
-          ),
-        ],
+
+            SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }

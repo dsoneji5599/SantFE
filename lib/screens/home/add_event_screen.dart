@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:sant_app/provider/home_provider.dart';
+import 'package:sant_app/screens/home/add_location_for_event.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/widgets/app_button.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
@@ -22,6 +23,8 @@ class AddEventScreen extends StatefulWidget {
   final String? eventDate;
   final String? description;
   final String eventId;
+  final double? latitude;
+  final double? longitude;
 
   const AddEventScreen({
     super.key,
@@ -32,6 +35,8 @@ class AddEventScreen extends StatefulWidget {
     this.eventDate,
     this.description,
     required this.eventId,
+    this.latitude,
+    this.longitude,
   });
 
   @override
@@ -42,6 +47,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _eventDateController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
   DateTime? _selectedEventDate;
 
@@ -49,6 +55,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
   ImageProvider? initialImage;
 
   late HomeProvider provider;
+
+  double? resultLatitude;
+  double? resultLongitude;
 
   // Form key for validation
   final _formKey = GlobalKey<FormState>();
@@ -102,6 +111,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
     if (widget.imagePath != null && widget.imagePath!.isNotEmpty) {
       initialImage = CachedNetworkImageProvider(widget.imagePath!);
+    }
+
+    if (widget.latitude != null && widget.longitude != null) {
+      resultLatitude = widget.latitude;
+      resultLongitude = widget.longitude;
+
+      _locationController.text = "Tap to view location";
     }
   }
 
@@ -366,6 +382,56 @@ class _AddEventScreenState extends State<AddEventScreen> {
                               ],
                             ),
 
+                            // Location
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AddLocationForEvent(
+                                          initialLat:
+                                              resultLatitude ?? widget.latitude,
+                                          initialLng:
+                                              resultLongitude ??
+                                              widget.longitude,
+                                          isViewOnly: widget.isDetail == true,
+                                        ),
+                                      ),
+                                    );
+
+                                    if (result != null &&
+                                        widget.isDetail != true) {
+                                      setState(() {
+                                        _locationController.text =
+                                            result["address"];
+                                        resultLatitude = result["lat"];
+                                        resultLongitude = result["lng"];
+                                      });
+                                    }
+                                  },
+
+                                  child: AbsorbPointer(
+                                    absorbing: true,
+                                    child: AppTextfield(
+                                      controller: _locationController,
+                                      label: "Location",
+                                      hintText: widget.isEdit == true
+                                          ? 'View Location'
+                                          : 'Select location',
+                                      enabled: false,
+                                      suffix: Icon(
+                                        Icons.location_on_outlined,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
                             // Submit Button
                             if (widget.isDetail == false)
                               AppButton(
@@ -428,6 +494,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
                                     "event_date": formattedDate,
                                     "description": _descriptionController.text
                                         .trim(),
+                                    "latitude": resultLatitude,
+                                    "longitude": resultLongitude,
                                   };
 
                                   if (base64Image != null) {

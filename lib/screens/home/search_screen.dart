@@ -284,7 +284,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _isFetchingDirections = false;
         } else if (!isJourneyStarted) {
           return;
-        // _controller?.animateCamera(CameraUpdate.newLatLng(myLocation));
+          // _controller?.animateCamera(CameraUpdate.newLatLng(myLocation));
         }
       }
     });
@@ -602,20 +602,20 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoading
-        ? Center(child: CircularProgressIndicator())
-        : (latitude == null || longitude == null)
-        ? Center(
-            child: Text(
-              "Location permission is not allowed. Please enable it from Settings.",
-              style: AppFonts.outfitBlack.copyWith(fontSize: 20),
-              textAlign: TextAlign.center,
-            ),
-          )
-        : AppScaffold(
-            scaffoldKey: Keys.scaffoldKey,
-            drawer: AppDrawer(),
-            body: Stack(
+    return AppScaffold(
+      scaffoldKey: Keys.scaffoldKey,
+      drawer: AppDrawer(),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : (latitude == null || longitude == null)
+          ? Center(
+              child: Text(
+                "Location permission is not allowed. Please enable it from Settings.",
+                style: AppFonts.outfitBlack.copyWith(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : Stack(
               children: [
                 Column(
                   children: [
@@ -803,7 +803,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ],
             ),
-          );
+    );
   }
 
   _searchTextField() => GestureDetector(

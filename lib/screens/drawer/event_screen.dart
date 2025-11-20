@@ -192,6 +192,8 @@ class EventCard extends StatelessWidget {
                           imagePath: event.imagePath,
                           isDetail: true,
                           eventId: event.eventId ?? "N/A",
+                          latitude: event.lat,
+                          longitude: event.long,
                         ),
                       );
                     },
@@ -238,6 +240,8 @@ class EventCard extends StatelessWidget {
                               isDetail: false,
                               isEdit: true,
                               eventId: event.eventId ?? "N/A",
+                              latitude: event.lat,
+                              longitude: event.long,
                             ),
                           );
                         },
@@ -259,6 +263,8 @@ class EventCard extends StatelessWidget {
                         imagePath: event.imagePath,
                         isDetail: true,
                         eventId: event.eventId ?? "N/A",
+                        latitude: event.lat,
+                        longitude: event.long,
                       ),
                     );
                   },

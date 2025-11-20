@@ -5,6 +5,8 @@ class EventModel {
   final String? description;
   final dynamic imagePath;
   final bool? isActive;
+  final double? lat;
+  final double? long;
 
   EventModel({
     this.eventId,
@@ -13,6 +15,8 @@ class EventModel {
     this.description,
     this.imagePath,
     this.isActive,
+    this.lat,
+    this.long,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) => EventModel(
@@ -24,5 +28,7 @@ class EventModel {
     description: json["description"],
     imagePath: json["image_path"],
     isActive: json["is_active"],
+    lat: json["latitude"],
+    long: json["longitude"],
   );
 }
