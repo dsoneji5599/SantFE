@@ -528,37 +528,39 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                         "vihar_details": _viharDetailController.text,
                       };
 
-                      bool registerSuccess;
-
                       if (widget.isUser) {
-                        registerSuccess = await context
+                        bool result = await context
                             .read<AuthProvider>()
                             .userRegister(data: data);
                         MySharedPreferences.instance.setBooleanValue(
                           "isUser",
                           widget.isUser,
                         );
+
+                        if (result) {
+                          navigatorPushReplacement(
+                            context,
+                            App(isUser: widget.isUser),
+                          );
+                        }
                       } else {
-                        registerSuccess = await context
+                        String santResult = await context
                             .read<AuthProvider>()
                             .santRegister(data: santData);
                         MySharedPreferences.instance.setBooleanValue(
                           "isUser",
                           widget.isUser,
                         );
-                      }
 
-                      if (registerSuccess) {
-                        if (widget.isUser) {
+                        if (santResult == "success") {
                           navigatorPushReplacement(
                             context,
                             App(isUser: widget.isUser),
                           );
-                        } else {
-                          navigatorPushReplacement(
-                            context,
-                            App(isUser: widget.isUser),
-                          );
+                        } else if (santResult == "pending") {
+                          return;
+                        } else if (santResult == "new") {
+                          return;
                         }
                       }
                     },

@@ -17,6 +17,8 @@ class SantAuthUrls {
   static String login = 'saint/saint_login';
   static String register = 'saint/saint_register';
   static String checkSantExist = 'saint/is_saint_exist';
+
+  static String bhaiLogin = 'saint/saint_login_as_bhai';
 }
 
 class UserProfileUrls {

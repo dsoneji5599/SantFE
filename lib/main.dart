@@ -22,9 +22,9 @@ void main() async {
 
   runApp(
     DevicePreview(
-      // enabled: false,
-      enabled:
-          !kReleaseMode, // Update with this when needs to check responsive UI
+      enabled: false,
+      // enabled:
+      //     !kReleaseMode, // Update with this when needs to check responsive UI
       builder: (context) {
         return const MyApp();
       },

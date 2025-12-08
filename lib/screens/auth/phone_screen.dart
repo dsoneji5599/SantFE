@@ -12,7 +12,8 @@ import 'package:sant_app/widgets/app_textfield.dart';
 
 class PhoneScreen extends StatefulWidget {
   final bool isUser;
-  const PhoneScreen({super.key, required this.isUser});
+  final bool? isBhai;
+  const PhoneScreen({super.key, required this.isUser, this.isBhai});
 
   @override
   State<PhoneScreen> createState() => _PhoneScreenState();
@@ -163,6 +164,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
                         verificationId: verificationId.toString(),
                         phoneNumber: phoneNumber,
                         isUser: widget.isUser,
+                        isBhai: widget.isBhai,
                       ),
                     );
 

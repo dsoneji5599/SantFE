@@ -89,8 +89,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: AppButton(
                 onTap: () {
-                  navigatorPush(context, LoginScreen(isUser: false));
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "Login as?",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              AppButton(
+                                text: "Sant Login",
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  navigatorPush(
+                                    context,
+                                    LoginScreen(isUser: false),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 12),
+
+                              AppButton(
+                                text: "Bhai Login",
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  navigatorPush(
+                                    context,
+                                    LoginScreen(isUser: false, isBhai: true),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
+
                 text: 'Sign In as Sant',
               ),
             ),

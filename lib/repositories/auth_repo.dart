@@ -72,4 +72,13 @@ class SantAuthRepository extends BaseRepository {
     log(response.body, name: 'response checkSantExistApi');
     return json.decode(response.body);
   }
+
+  Future bhaiLoginApi(Map<String, dynamic> data) async {
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + SantAuthUrls.bhaiLogin,
+      data: data,
+    );
+    log(response.body, name: 'response bhaiLoginApi');
+    return json.decode(response.body);
+  }
 }

@@ -59,6 +59,12 @@ class AuthProvider extends ChangeNotifier {
 
         await getToken();
         return true;
+      } else if (statusCode == 403) {
+        toastMessage(
+          response['message'] ?? 'User is blocked',
+          isSuccess: false,
+        );
+        return false;
       } else {
         log(response['message'] ?? 'Failed login User');
         // toastMessage(
@@ -131,7 +137,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Sant Functions
-  Future<bool> santLogin({
+  Future<String> santLogin({
     String? firebaseUid,
     String? phoneNumber,
     String? email,
@@ -149,6 +155,15 @@ class AuthProvider extends ChangeNotifier {
       final statusCode = int.tryParse(response['status_code'].toString());
 
       if (statusCode == 200) {
+        final loginData = response["data"];
+        if (loginData == null || (loginData is Map && loginData.isEmpty)) {
+          toastMessage(
+            response['message'] ?? 'Saint approval is still pending.',
+            isSuccess: false,
+          );
+          return "pending";
+        }
+
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
 
@@ -163,28 +178,34 @@ class AuthProvider extends ChangeNotifier {
         );
 
         await getToken();
-        return true;
+        return "success";
       } else {
         log(response['message'] ?? 'Failed login Sant');
-        // toastMessage(
-        //   response['message'] ?? 'Failed login Sant',
-        //   isSuccess: false,
-        // );
-        return false;
+        return "new";
       }
     } catch (e, s) {
       log(e.toString(), stackTrace: s, name: "response santLogin");
       toastMessage('Something went wrong!', isSuccess: false);
-      return false;
+      return "new";
     }
   }
 
-  Future<bool> santRegister({required Map<String, dynamic> data}) async {
+  Future<String> santRegister({required Map<String, dynamic> data}) async {
     try {
       final response = await santAuthRepo.santRegisteregisterApi(data);
       final statusCode = int.tryParse(response['status_code'].toString());
 
       if (statusCode == 201) {
+        final loginData = response["data"];
+        if (loginData == null || (loginData is Map && loginData.isEmpty)) {
+          toastMessage(
+            response['message'] ??
+                'Saint registered successfully. Awaiting approval.',
+            isSuccess: false,
+          );
+          return "pending";
+        }
+
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
 
@@ -199,19 +220,18 @@ class AuthProvider extends ChangeNotifier {
         );
 
         await getToken();
-        return true;
+        return "success";
       } else {
-        log(response['message'] ?? 'Failed Registering Sant');
         toastMessage(
           response['message'] ?? 'Failed Registering Sant',
           isSuccess: false,
         );
-        return false;
+        return "new";
       }
     } catch (e, s) {
       log(e.toString(), stackTrace: s, name: "response santRegister");
       toastMessage('Something went wrong!', isSuccess: false);
-      return false;
+      return "new";
     }
   }
 
@@ -230,6 +250,55 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e, s) {
       log(e.toString(), stackTrace: s, name: "response checkSantExist");
+      return false;
+    }
+  }
+
+  // Bhai Login
+  Future<bool> bhaiLogin({
+    String? firebaseUid,
+    String? phoneNumber,
+    String? email,
+  }) async {
+    try {
+      Map<String, dynamic> data = {
+        'firebase_uid': firebaseUid,
+        if (phoneNumber?.isNotEmpty == true)
+          'mobile': phoneNumber
+        else if (email?.isNotEmpty == true)
+          'email': email,
+      };
+
+      final response = await santAuthRepo.bhaiLoginApi(data);
+      final statusCode = int.tryParse(response['status_code'].toString());
+
+      if (statusCode == 200) {
+        accessToken = response["data"]["access_token"];
+        refreshToken = response["data"]["refresh_token"];
+
+        MySharedPreferences.instance.setStringValue("user_id", userId);
+        MySharedPreferences.instance.setStringValue(
+          "access_token",
+          accessToken,
+        );
+        MySharedPreferences.instance.setStringValue(
+          "refresh_token",
+          refreshToken,
+        );
+
+        toastMessage('Successfully Login as Bhai');
+
+        await getToken();
+        return true;
+      } else {
+        log(response['message'] ?? 'Failed login Sant');
+        toastMessage(response['message'] ?? 'Failed login Sant');
+
+        return false;
+      }
+    } catch (e, s) {
+      log(e.toString(), stackTrace: s, name: "response bhaiLogin");
+      toastMessage('Something went wrong!', isSuccess: false);
       return false;
     }
   }

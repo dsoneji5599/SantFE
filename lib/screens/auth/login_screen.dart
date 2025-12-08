@@ -21,7 +21,8 @@ import 'package:sant_app/widgets/app_scaffold.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isUser;
-  const LoginScreen({super.key, required this.isUser});
+  final bool? isBhai;
+  const LoginScreen({super.key, required this.isUser, this.isBhai});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -57,7 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: AppButton(
                 onTap: () {
-                  navigatorPush(context, PhoneScreen(isUser: widget.isUser));
+                  navigatorPush(
+                    context,
+                    PhoneScreen(isUser: widget.isUser, isBhai: widget.isBhai),
+                  );
                 },
                 text: 'Sign In',
               ),
@@ -152,12 +156,34 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'name': value.user?.displayName ?? '',
                                 'email': value.user?.email ?? '',
                                 'photoUrl': value.user?.photoURL ?? '',
-                                'phone': '', // no phone here for Google Sign-In
+                                'phone': '',
                                 'createdAt': FieldValue.serverTimestamp(),
                                 'isUser': widget.isUser,
                               }, SetOptions(merge: true));
 
-                          Navigator.pop(loaderCTX0!);
+                          if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
+
+                          if (widget.isBhai == true) {
+                            bool loginSuccess = await context
+                                .read<AuthProvider>()
+                                .userLogin(
+                                  email: value.user?.email ?? '',
+                                  firebaseUid: value.user?.uid ?? '',
+                                );
+                            MySharedPreferences.instance.setBooleanValue(
+                              "isUser",
+                              widget.isUser,
+                            );
+
+                            if (loginSuccess) {
+                              navigatorPushReplacement(
+                                context,
+                                App(isUser: widget.isUser),
+                              );
+                              return;
+                            }
+                            return;
+                          }
 
                           if (widget.isUser) {
                             final isNewUser = !(await context
@@ -176,6 +202,25 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                               return;
                             }
+
+                            bool loginSuccess = await context
+                                .read<AuthProvider>()
+                                .bhaiLogin(
+                                  email: value.user?.email ?? '',
+                                  firebaseUid: value.user?.uid ?? '',
+                                );
+
+                            MySharedPreferences.instance.setBooleanValue(
+                              "isUser",
+                              widget.isUser,
+                            );
+
+                            if (loginSuccess) {
+                              navigatorPushReplacement(
+                                context,
+                                App(isUser: widget.isUser),
+                              );
+                            }
                           } else {
                             final isNewSant = !(await context
                                 .read<AuthProvider>()
@@ -193,24 +238,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                               return;
                             }
-                          }
 
-                          // Existing user login attempt
-                          bool loginSuccess;
-
-                          if (widget.isUser) {
-                            loginSuccess = await context
-                                .read<AuthProvider>()
-                                .userLogin(
-                                  email: value.user?.email ?? '',
-                                  firebaseUid: value.user?.uid ?? '',
-                                );
-                            MySharedPreferences.instance.setBooleanValue(
-                              "isUser",
-                              widget.isUser,
-                            );
-                          } else {
-                            loginSuccess = await context
+                            String santResult = await context
                                 .read<AuthProvider>()
                                 .santLogin(
                                   email: value.user?.email ?? '',
@@ -220,24 +249,19 @@ class _LoginScreenState extends State<LoginScreen> {
                               "isUser",
                               widget.isUser,
                             );
-                          }
 
-                          // if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
-
-                          if (loginSuccess) {
-                            if (widget.isUser) {
+                            if (santResult == "success") {
                               navigatorPushReplacement(
                                 context,
                                 App(isUser: widget.isUser),
                               );
-                            } else {
-                              navigatorPushReplacement(
+                            } else if (santResult == "new") {
+                              toastMessage('Login failed. Please try again.');
+                            } else if (santResult == "pending") {
+                              Navigator.of(
                                 context,
-                                App(isUser: widget.isUser),
-                              );
+                              ).popUntil((route) => route.isFirst);
                             }
-                          } else {
-                            toastMessage('Login failed. Please try again.');
                           }
                         } catch (e, s) {
                           if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
@@ -290,76 +314,137 @@ class _LoginScreenState extends State<LoginScreen> {
                             final value = await signInWithApple();
 
                             if (value == null) {
-                              if (loaderCTX0 != null)
+                              if (loaderCTX0 != null) {
                                 Navigator.pop(loaderCTX0!);
+                              }
                               toastMessage(
                                 "Apple Sign-In failed! Please try again.",
                               );
                               return;
                             }
 
-                            final isNewUser = !(await context
-                                .read<AuthProvider>()
-                                .checkUserExist(email: value.user?.email));
-
-                            if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
-
-                            if (isNewUser) {
-                              navigatorPush(
-                                context,
-                                RegisterUserScreen(
-                                  firebaseUid: value.user?.uid ?? "",
-                                  email: value.user?.email ?? '',
-                                  isUser: widget.isUser,
-                                  isFromPhone: false,
-                                ),
-                              );
+                            final currentUser =
+                                FirebaseAuth.instance.currentUser;
+                            if (currentUser == null ||
+                                currentUser.uid != value.user?.uid) {
+                              Navigator.pop(loaderCTX0!);
+                              toastMessage("User not authenticated properly.");
                               return;
                             }
 
-                            // Existing user login attempt
-                            bool loginSuccess;
-
-                            if (widget.isUser) {
-                              loginSuccess = await context
-                                  .read<AuthProvider>()
-                                  .userLogin(
-                                    phoneNumber: value.user?.email ?? '',
-                                    firebaseUid: value.user?.uid ?? '',
-                                  );
-                              MySharedPreferences.instance.setBooleanValue(
-                                "isUser",
-                                widget.isUser,
-                              );
-                            } else {
-                              loginSuccess = await context
-                                  .read<AuthProvider>()
-                                  .santLogin(
-                                    phoneNumber: value.user?.email ?? '',
-                                    firebaseUid: value.user?.uid ?? '',
-                                  );
-                              MySharedPreferences.instance.setBooleanValue(
-                                "isUser",
-                                widget.isUser,
-                              );
-                            }
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(value.user?.uid)
+                                .set({
+                                  'uid': value.user?.uid ?? '',
+                                  'name': value.user?.displayName ?? '',
+                                  'email': value.user?.email ?? '',
+                                  'photoUrl': value.user?.photoURL ?? '',
+                                  'phone': '',
+                                  'createdAt': FieldValue.serverTimestamp(),
+                                  'isUser': widget.isUser,
+                                }, SetOptions(merge: true));
 
                             if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
 
-                            if (loginSuccess) {
-                              if (widget.isUser) {
+                            if (widget.isBhai == true) {
+                              bool loginSuccess = await context
+                                  .read<AuthProvider>()
+                                  .userLogin(
+                                    email: value.user?.email ?? '',
+                                    firebaseUid: value.user?.uid ?? '',
+                                  );
+                              MySharedPreferences.instance.setBooleanValue(
+                                "isUser",
+                                widget.isUser,
+                              );
+
+                              if (loginSuccess) {
                                 navigatorPushReplacement(
                                   context,
                                   App(isUser: widget.isUser),
                                 );
-                              } else {
+                                return;
+                              }
+                              return;
+                            }
+
+                            if (widget.isUser) {
+                              final isNewUser = !(await context
+                                  .read<AuthProvider>()
+                                  .checkUserExist(email: value.user?.email));
+
+                              if (isNewUser) {
+                                navigatorPush(
+                                  context,
+                                  RegisterUserScreen(
+                                    firebaseUid: value.user?.uid ?? '',
+                                    email: value.user?.email ?? '',
+                                    isUser: widget.isUser,
+                                    isFromPhone: false,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              bool loginSuccess = await context
+                                  .read<AuthProvider>()
+                                  .userLogin(
+                                    email: value.user?.email ?? '',
+                                    firebaseUid: value.user?.uid ?? '',
+                                  );
+                              MySharedPreferences.instance.setBooleanValue(
+                                "isUser",
+                                widget.isUser,
+                              );
+
+                              if (loginSuccess) {
                                 navigatorPushReplacement(
                                   context,
                                   App(isUser: widget.isUser),
                                 );
                               }
                             } else {
-                              toastMessage('Login failed. Please try again.');
+                              final isNewSant = !(await context
+                                  .read<AuthProvider>()
+                                  .checkSantExist(email: value.user?.email));
+
+                              if (isNewSant) {
+                                navigatorPush(
+                                  context,
+                                  RegisterUserScreen(
+                                    firebaseUid: value.user?.uid ?? '',
+                                    email: value.user?.email ?? '',
+                                    isUser: widget.isUser,
+                                    isFromPhone: false,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              String santResult = await context
+                                  .read<AuthProvider>()
+                                  .santLogin(
+                                    email: value.user?.email ?? '',
+                                    firebaseUid: value.user?.uid ?? '',
+                                  );
+                              MySharedPreferences.instance.setBooleanValue(
+                                "isUser",
+                                widget.isUser,
+                              );
+
+                              if (santResult == "success") {
+                                navigatorPushReplacement(
+                                  context,
+                                  App(isUser: widget.isUser),
+                                );
+                              } else if (santResult == "new") {
+                                toastMessage('Login failed. Please try again.');
+                              } else if (santResult == "pending") {
+                                Navigator.of(
+                                  context,
+                                ).popUntil((route) => route.isFirst);
+                              }
                             }
                           } catch (e, s) {
                             if (loaderCTX0 != null) Navigator.pop(loaderCTX0!);
