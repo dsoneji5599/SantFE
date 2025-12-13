@@ -40,8 +40,9 @@ class _AppState extends State<App> {
     widget.isUser == true
         ? profileProvider.getProfile()
         : profileProvider.getSantProfile();
-
-    myIndex = widget.myIndex;
+        
+    int screensLength = widget.isUser == true ? 6 : 5;
+    myIndex = widget.myIndex.clamp(0, screensLength - 1);
     _pageController = PageController(initialPage: myIndex);
   }
 
@@ -73,22 +74,19 @@ class _AppState extends State<App> {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
-        if (!didPop) {
-          if (myIndex != 0) {
-            setState(() {
-              myIndex = 0;
-            });
-            _pageController.jumpToPage(0);
-          } else if (myIndex == 0) {
-            SystemNavigator.pop();
-          } else {
-            setState(() {
-              myIndex = 0;
-            });
-            Navigator.of(context).maybePop();
-          }
+        if (didPop) return;
+
+        if (myIndex != 0) {
+          setState(() {
+            myIndex = 0;
+          });
+          _pageController.jumpToPage(0);
+          return;
         }
+
+        SystemNavigator.pop();
       },
+
       child: Scaffold(
         drawer: Drawer(
           child: Consumer<UserProfileProvider>(

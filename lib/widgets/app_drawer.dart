@@ -75,7 +75,10 @@ class _AppDrawerState extends State<AppDrawer> {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        navigatorPushReplacement(context, App(isUser: isUser, myIndex: 5));
+        navigatorPushReplacement(
+          context,
+          App(isUser: isUser, myIndex: isUser == true ? 5 : 4),
+        );
       },
       child: Container(
         width: double.infinity,

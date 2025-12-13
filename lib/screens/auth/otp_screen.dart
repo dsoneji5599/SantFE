@@ -36,7 +36,6 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final otpController = TextEditingController();
-  final FocusNode _otpFocusNode = FocusNode();
 
   late String verificationId;
 
@@ -65,22 +64,21 @@ class _OtpScreenState extends State<OtpScreen> {
     });
   }
 
+  String _cleanPhone(String? phone) {
+    return (phone ?? '').replaceAll(RegExp(r'^\+?91'), '').trim();
+  }
+
   @override
   void initState() {
     super.initState();
     startTimer();
     verificationId = widget.verificationId;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).requestFocus(_otpFocusNode);
-    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     otpController.dispose();
-    _otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -163,7 +161,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     keyboardType: TextInputType.number,
                     length: 6,
                     controller: otpController,
-                    focusNode: _otpFocusNode,
+                    autoFocus: true,
                     onChanged: (_) {},
                     pinTheme: PinTheme(
                       shape: PinCodeFieldShape.box,
@@ -232,7 +230,6 @@ class _OtpScreenState extends State<OtpScreen> {
                                 );
                               }
                             } catch (e) {
-                              if (loaderCtx != null) Navigator.pop(loaderCtx!);
                               toastMessage("An error occurred. Try again.");
                             }
                           }
@@ -307,7 +304,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       bool loginSuccess = await context
                           .read<AuthProvider>()
                           .bhaiLogin(
-                            phoneNumber: user?.user?.phoneNumber ?? '',
+                            phoneNumber: _cleanPhone(user?.user?.phoneNumber),
                             firebaseUid: user?.user?.uid ?? '',
                           );
                       MySharedPreferences.instance.setBooleanValue(
@@ -326,86 +323,103 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     if (user != null) {
                       if (widget.isUser) {
+                        final isNewUser = !(await context
+                            .read<AuthProvider>()
+                            .checkUserExist(
+                              phone: _cleanPhone(user.user?.phoneNumber),
+                            ));
+
+                        if (isNewUser) {
+                          navigatorPush(
+                            context,
+                            RegisterUserScreen(
+                              firebaseUid: user.user?.uid ?? '',
+                              phoneNumber: _cleanPhone(user.user?.phoneNumber),
+                              isUser: widget.isUser,
+                              isFromPhone: true,
+                            ),
+                          );
+                          return;
+                        }
+
                         bool loginSuccess = await context
                             .read<AuthProvider>()
                             .userLogin(
-                              phoneNumber: user.user?.phoneNumber ?? '',
+                              phoneNumber: _cleanPhone(user.user?.phoneNumber),
                               firebaseUid: user.user?.uid ?? '',
                             );
+
                         MySharedPreferences.instance.setBooleanValue(
                           "isUser",
                           widget.isUser,
                         );
-                        if (loginSuccess) {
-                          if (loaderCtx != null) Navigator.pop(loaderCtx!);
 
+                        if (loginSuccess) {
                           navigatorPushReplacement(
                             context,
                             App(isUser: widget.isUser),
                           );
                         } else {
-                          if (loaderCtx != null) Navigator.pop(loaderCtx!);
+                          Navigator.pop(context);
+                        }
+                      } else {
+                        final isNewSant = !(await context
+                            .read<AuthProvider>()
+                            .checkSantExist(
+                              phone: _cleanPhone(user.user?.phoneNumber),
+                            ));
 
+                        if (isNewSant) {
                           navigatorPush(
                             context,
                             RegisterUserScreen(
-                              firebaseUid: user.user?.uid ?? "",
-                              phoneNumber: widget.phoneNumber,
+                              firebaseUid: user.user?.uid ?? '',
+                              phoneNumber: _cleanPhone(user.user?.phoneNumber),
                               isUser: widget.isUser,
                               isFromPhone: true,
                             ),
                           );
+                          return;
                         }
-                      } else {
+
                         String santResult = await context
                             .read<AuthProvider>()
                             .santLogin(
-                              phoneNumber: user.user?.phoneNumber ?? '',
+                              phoneNumber: _cleanPhone(user.user?.phoneNumber),
                               firebaseUid: user.user?.uid ?? '',
                             );
+
                         MySharedPreferences.instance.setBooleanValue(
                           "isUser",
                           widget.isUser,
                         );
 
                         if (santResult == "success") {
-                          if (loaderCtx != null) Navigator.pop(loaderCtx!);
-
                           navigatorPushReplacement(
                             context,
                             App(isUser: widget.isUser),
                           );
-                        } else if (santResult == "new") {
-                          if (loaderCtx != null) Navigator.pop(loaderCtx!);
+                          return;
+                        }
 
-                          navigatorPush(
-                            context,
-                            RegisterUserScreen(
-                              firebaseUid: user.user?.uid ?? "",
-                              phoneNumber: widget.phoneNumber,
-                              isUser: widget.isUser,
-                              isFromPhone: true,
-                            ),
-                          );
-                        } else if (santResult == "pending") {
-                          if (loaderCtx != null) Navigator.pop(loaderCtx!);
-
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
+                        if (santResult == "pending") {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                          Navigator.pop(context);
                         }
                       }
 
                       // Save phone in shared preferences
                       MySharedPreferences.instance.setStringValue(
                         "phone",
-                        widget.phoneNumber,
+                        _cleanPhone(user.user?.phoneNumber),
                       );
 
-                      if (loaderCtx != null) Navigator.pop(loaderCtx!);
+                      return;
                     } else {
                       if (loaderCtx != null) Navigator.pop(loaderCtx!);
                       toastMessage('Invalid OTP. Please try again');
+                      return;
                     }
                   } catch (e, s) {
                     if (loaderCtx != null) Navigator.pop(loaderCtx!);

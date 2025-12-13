@@ -82,7 +82,9 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _emailController.text = widget.email ?? "";
-      _phoneController.text = widget.phoneNumber ?? "";
+      _phoneController.text = (widget.phoneNumber ?? '')
+          .replaceAll(RegExp(r'^\+?91'), '')
+          .trim();
 
       await utilProvider.getCountry();
       await utilProvider.getSamaj();

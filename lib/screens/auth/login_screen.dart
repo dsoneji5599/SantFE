@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (widget.isBhai == true) {
                             bool loginSuccess = await context
                                 .read<AuthProvider>()
-                                .userLogin(
+                                .bhaiLogin(
                                   email: value.user?.email ?? '',
                                   firebaseUid: value.user?.uid ?? '',
                                 );
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             bool loginSuccess = await context
                                 .read<AuthProvider>()
-                                .bhaiLogin(
+                                .userLogin(
                                   email: value.user?.email ?? '',
                                   firebaseUid: value.user?.uid ?? '',
                                 );

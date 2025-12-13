@@ -31,6 +31,8 @@ class SantListModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool? isBookmarked;
+  final String? approvalStatus;
+  final CurrentLocation? currentLocation;
 
   SantListModel({
     this.firebaseUid,
@@ -65,6 +67,8 @@ class SantListModel {
     this.createdAt,
     this.updatedAt,
     this.isBookmarked,
+    this.approvalStatus,
+    this.currentLocation,
   });
 
   factory SantListModel.fromJson(Map<String, dynamic> json) => SantListModel(
@@ -106,7 +110,30 @@ class SantListModel {
         ? null
         : DateTime.parse(json["updated_at"]),
     isBookmarked: json["is_bookmarked"],
+    approvalStatus: json["approval_status"],
+    currentLocation: json["current_location"] == null
+        ? null
+        : CurrentLocation.fromJson(json["current_location"]),
   );
+}
+
+class CurrentLocation {
+  final double? latitude;
+  final double? longitude;
+
+  CurrentLocation({this.latitude, this.longitude});
+
+  factory CurrentLocation.fromJson(Map<String, dynamic> json) {
+    return CurrentLocation(
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+  };
 }
 
 class Extra {

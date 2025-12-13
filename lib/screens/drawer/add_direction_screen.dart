@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:sant_app/provider/location_provider.dart';
+import 'package:sant_app/provider/sant_provider.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/widgets/add_direction_search_bottom_sheet.dart';
@@ -36,12 +37,14 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
   bool isRestingJourney = false;
 
   late LocationProvider locationProvider;
+  late SantProvider santProvider;
 
   @override
   void initState() {
     super.initState();
     isLoading = true;
     locationProvider = Provider.of<LocationProvider>(context, listen: false);
+    santProvider = Provider.of<SantProvider>(context, listen: false);
 
     locationProvider.getLiveSantJourneyProvider().then((journey) {
       if (journey != null) {
@@ -473,8 +476,12 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                   bool updatedJourney = await locationProvider
                                       .updateJourneyProvider(data: data);
                                   if (updatedJourney) {
-                                    locationProvider
+                                    await locationProvider
                                         .getLiveSantJourneyProvider();
+                                    await santProvider.getSantList(
+                                      data: {},
+                                      offSet: 0,
+                                    );
                                     setState(() {
                                       isRestingJourney = false;
                                     });
@@ -541,8 +548,12 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                   bool updatedJourney = await locationProvider
                                       .updateJourneyProvider(data: data);
                                   if (updatedJourney) {
-                                    locationProvider
+                                    await locationProvider
                                         .getLiveSantJourneyProvider();
+                                    await santProvider.getSantList(
+                                      data: {},
+                                      offSet: 0,
+                                    );
                                     setState(() {
                                       isRestingJourney = true;
                                     });
@@ -599,7 +610,17 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                 bool endedJourney = await locationProvider
                                     .updateJourneyProvider(data: data);
                                 if (endedJourney) {
-                                  locationProvider.getLiveSantJourneyProvider();
+                                  await locationProvider
+                                      .getLiveSantJourneyProvider();
+                                  await santProvider.getSantList(
+                                    data: {},
+                                    offSet: 0,
+                                  );
+                                  await locationProvider.getNearbySantList(
+                                    data: {"city": currentCity ?? ''},
+                                    offSet: 0,
+                                    city: currentCity ?? "",
+                                  );
                                   setState(() {
                                     hasStartedJourney = false;
                                     isRestingJourney = false;

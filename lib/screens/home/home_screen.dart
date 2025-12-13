@@ -180,12 +180,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoading
-        ? Center(child: CircularProgressIndicator())
-        : AppScaffold(
-            scaffoldKey: Keys.scaffoldKey,
-            drawer: AppDrawer(),
-            body: Selector<SantProvider, List<SantListModel>>(
+    return AppScaffold(
+      scaffoldKey: Keys.scaffoldKey,
+      drawer: AppDrawer(),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Selector<SantProvider, List<SantListModel>>(
               selector: (context, provider) => provider.santList,
               builder: (context, santList, child) {
                 return Column(
@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-          );
+    );
   }
 }
 
@@ -294,6 +294,7 @@ class SantCard extends StatelessWidget {
                     ),
                     Text(
                       sant.samajName ?? 'N/A',
+                      overflow: TextOverflow.ellipsis,
                       style: AppFonts.outfitBlack.copyWith(
                         fontSize: 16,
                         color: AppColors.appGrey.withValues(alpha: 0.5),
@@ -310,11 +311,15 @@ class SantCard extends StatelessWidget {
                       "Sampraday: ",
                       style: AppFonts.outfitBlack.copyWith(fontSize: 16),
                     ),
-                    Text(
-                      sant.sampraday ?? 'N/A',
-                      style: AppFonts.outfitBlack.copyWith(
-                        color: AppColors.appGrey.withValues(alpha: 0.5),
-                        fontSize: 16,
+                    SizedBox(
+                      width: 130,
+                      child: Text(
+                        sant.sampraday ?? 'N/A',
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.outfitBlack.copyWith(
+                          color: AppColors.appGrey.withValues(alpha: 0.5),
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],

@@ -159,11 +159,15 @@ class SantCard extends StatelessWidget {
                       "Sampraday: ",
                       style: AppFonts.outfitBlack.copyWith(fontSize: 16),
                     ),
-                    Text(
-                      sant.sampraday ?? 'N/A',
-                      style: AppFonts.outfitBlack.copyWith(
-                        color: AppColors.appGrey.withValues(alpha: 0.5),
-                        fontSize: 16,
+                    SizedBox(
+                      width: 130,
+                      child: Text(
+                        sant.sampraday ?? 'N/A',
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.outfitBlack.copyWith(
+                          color: AppColors.appGrey.withValues(alpha: 0.5),
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ],

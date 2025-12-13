@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
 import 'package:sant_app/provider/location_provider.dart';
 import 'package:sant_app/screens/detail_screens/journey_history_detail.dart';
+import 'package:sant_app/screens/detail_screens/sant_last_location.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/themes/app_fonts.dart';
@@ -196,40 +197,60 @@ class SantDetailScreen extends StatelessWidget {
                             .toList(),
                   ),
 
-                  if (isLive)
+                  if (isLive || (!isLive && sant.currentLocation != null))
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         TextButton(
                           onPressed: () {
-                            final liveSant = context
-                                .read<LocationProvider>()
-                                .nearbySantList
-                                .firstWhere(
-                                  (e) => e.saintDetail.saintId == sant.saintId,
-                                );
+                            final locationProvider = context
+                                .read<LocationProvider>();
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => JourneyHistoryDetailScreen(
-                                  startLatitude:
-                                      liveSant.journeyDetail.startLatitude,
-                                  startLongitude:
-                                      liveSant.journeyDetail.startLongitude,
-                                  endLatitude:
-                                      liveSant.journeyDetail.endLatitude,
-                                  endLongitude:
-                                      liveSant.journeyDetail.endLongitude,
-                                  startLocationName:
-                                      liveSant.journeyDetail.currentCity,
-                                  endLocationName:
-                                      liveSant.journeyDetail.currentCity,
-                                  startDate: liveSant.journeyDetail.startDate,
-                                  endDate: liveSant.journeyDetail.endDate ?? "",
+                            if (isLive) {
+                              final liveSant = locationProvider.nearbySantList
+                                  .firstWhere(
+                                    (e) =>
+                                        e.saintDetail.saintId == sant.saintId,
+                                  );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => JourneyHistoryDetailScreen(
+                                    startLatitude:
+                                        liveSant.journeyDetail.startLatitude,
+                                    startLongitude:
+                                        liveSant.journeyDetail.startLongitude,
+                                    endLatitude:
+                                        liveSant.journeyDetail.endLatitude,
+                                    endLongitude:
+                                        liveSant.journeyDetail.endLongitude,
+                                    startLocationName:
+                                        liveSant.journeyDetail.currentCity,
+                                    endLocationName:
+                                        liveSant.journeyDetail.currentCity,
+                                    startDate: liveSant.journeyDetail.startDate,
+                                    endDate:
+                                        liveSant.journeyDetail.endDate ?? "",
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                              return;
+                            }
+
+                            if (sant.currentLocation != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SantLastLocation(
+                                    lastLocationLatitude:
+                                        sant.currentLocation!.latitude!,
+                                    lastLocationLongitude:
+                                        sant.currentLocation!.longitude!,
+                                  ),
+                                ),
+                              );
+                            }
                           },
 
                           child: Text(
