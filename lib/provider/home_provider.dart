@@ -93,6 +93,56 @@ class HomeProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> editFamily({
+    required Map<String, dynamic> data,
+    required String userFamilyId,
+  }) async {
+    try {
+      Map<String, dynamic> responseData = await repo.editFamilyMemberAPI(
+        data,
+        userFamilyId,
+      );
+      if (responseData['status_code'] == 200) {
+        toastMessage("Family Member Updated Successfully.");
+        await getFamilyList();
+        notifyListeners();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'editFamily');
+        toastMessage("Failed Updating Family Member!");
+        notifyListeners();
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "editFamily");
+      toastMessage("Failed Adding Family Member!");
+      return false;
+    }
+  }
+
+  Future<bool> removeFamilyMember({required String userFamilyId}) async {
+    try {
+      Map<String, dynamic> responseData = await repo.removeFamilyMemberAPI(
+        userFamilyId,
+      );
+      if (responseData['status_code'] == 200) {
+        toastMessage("Family Member Removed Successfully.");
+        await getFamilyList();
+        notifyListeners();
+        return true;
+      } else {
+        log(responseData.toString(), name: 'removeFamilyMember');
+        toastMessage("Failed Removing Family Member!");
+        notifyListeners();
+        return false;
+      }
+    } catch (e, s) {
+      log("$e", stackTrace: s, name: "removeFamilyMember");
+      toastMessage("Failed Adding Family Member!");
+      return false;
+    }
+  }
+
   Future<bool> addTemple({required Map<String, dynamic> data}) async {
     try {
       Map<String, dynamic> responseData = await repo.addTempleAPI(data);

@@ -11,7 +11,10 @@ import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/keys.dart';
 
 class TempleScreen extends StatefulWidget {
-  const TempleScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const TempleScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<TempleScreen> createState() => _TempleScreenState();
@@ -54,21 +57,34 @@ class _TempleScreenState extends State<TempleScreen>
               children: [
                 SizedBox(height: 60),
                 // Appbar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                Column(
                   children: [
-                    InkWell(
-                      onTap: () {
-                        Keys.scaffoldKey.currentState?.openDrawer();
-                      },
-                      child: Icon(Icons.menu, size: 24, color: Colors.white),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Keys.scaffoldKey.currentState?.openDrawer();
+                          },
+                          icon: Icon(Icons.menu, size: 24, color: Colors.white),
+                        ),
+                        Image.asset(
+                          AppLogos.homeLogo,
+                          height: 50,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 24),
+                      ],
                     ),
-                    Image.asset(
-                      AppLogos.homeLogo,
-                      height: 50,
-                      color: Colors.white,
-                    ),
-                    SizedBox(width: 24),
+                    if (widget.isUser == false && widget.profileType != null)
+                      Text(
+                        widget.profileType!.toUpperCase(),
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
                 SizedBox(height: 30),

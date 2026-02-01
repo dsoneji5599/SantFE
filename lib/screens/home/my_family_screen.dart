@@ -13,7 +13,10 @@ import 'package:sant_app/widgets/keys.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 
 class MyFamilyScreen extends StatefulWidget {
-  const MyFamilyScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const MyFamilyScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<MyFamilyScreen> createState() => _MyFamilyScreenState();
@@ -51,14 +54,16 @@ class _MyFamilyScreenState extends State<MyFamilyScreen> {
                 return Column(
                   children: [
                     const SizedBox(height: 60),
+
+                    // AppBar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        InkWell(
-                          onTap: () {
+                        IconButton(
+                          onPressed: () {
                             Keys.scaffoldKey.currentState?.openDrawer();
                           },
-                          child: const Icon(
+                          icon: const Icon(
                             Icons.menu,
                             size: 24,
                             color: Colors.white,
@@ -238,6 +243,60 @@ class FamilyCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      navigatorPush(
+                        context,
+                        AddFamilyMemberScreen(isEdit: true, family: family),
+                      );
+                    },
+                    child: Icon(Icons.edit, color: AppColors.appGrey),
+                  ),
+                  SizedBox(width: 10),
+                  InkWell(
+                    onTap: () async {
+                      final confirm = await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Delete Family Member"),
+                            content: const Text(
+                              "Are you sure you want to delete this family member?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, false);
+                                },
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, true);
+                                },
+                                child: const Text("Delete"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      if (confirm == true) {
+                        Provider.of<HomeProvider>(
+                          context,
+                          listen: false,
+                        ).removeFamilyMember(userFamilyId: family.userId ?? "");
+                      }
+                    },
+                    child: Icon(Icons.delete, color: AppColors.appGrey),
+                  ),
+                ],
               ),
             ),
           ],

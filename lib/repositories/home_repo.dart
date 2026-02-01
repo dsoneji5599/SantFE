@@ -44,6 +44,33 @@ class HomeRepo extends BaseRepository {
     return json.decode(response.body);
   }
 
+  Future editFamilyMemberAPI(
+    Map<String, dynamic> data,
+    String userFamilyId,
+  ) async {
+    String params = '?user_family_id=$userFamilyId';
+
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.editFamily + params,
+      data: data,
+      token: true,
+    );
+    log(response.body, name: 'response editFamilyMemberAPI');
+    return json.decode(response.body);
+  }
+
+  Future removeFamilyMemberAPI(String userFamilyId) async {
+    String params = '?user_family_id=$userFamilyId';
+
+    final response = await postHttp(
+      api: ApiUrls.baseUrl + HomeUrls.removeFamilyMember + params,
+      data: {},
+      token: true,
+    );
+    log(response.body, name: 'response removeFamilyMemberAPI');
+    return json.decode(response.body);
+  }
+
   Future addTempleAPI(Map<String, dynamic> data) async {
     final response = await postHttp(
       api: ApiUrls.baseUrl + HomeUrls.addTemples,

@@ -14,6 +14,7 @@ import 'package:sant_app/screens/home/search_screen.dart';
 import 'package:sant_app/screens/home/temple_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
+import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/keys.dart';
 
@@ -31,19 +32,30 @@ class _AppState extends State<App> {
   late PageController _pageController;
   late UserProfileProvider profileProvider;
   ScrollController scrollController = ScrollController();
+  String? profileType;
 
   @override
   void initState() {
     super.initState();
 
+    _loadProfileType();
     profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
     widget.isUser == true
         ? profileProvider.getProfile()
         : profileProvider.getSantProfile();
-        
+
     int screensLength = widget.isUser == true ? 6 : 5;
     myIndex = widget.myIndex.clamp(0, screensLength - 1);
     _pageController = PageController(initialPage: myIndex);
+  }
+
+  Future<void> _loadProfileType() async {
+    final prefs = await MySharedPreferences.instance.getStringValue(
+      "profile_type",
+    );
+    setState(() {
+      profileType = prefs;
+    });
   }
 
   void onCallSavedHomes() {
@@ -63,12 +75,16 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     List<Widget> screens = [
-      const HomeScreen(),
-      const SearchScreen(),
-      const TempleScreen(),
-      const SavedScreen(),
-      if (widget.isUser == true) const MyFamilyScreen(),
-      const UserProfileScreen(),
+      HomeScreen(profileType: profileType, isUser: widget.isUser ?? true),
+      SearchScreen(profileType: profileType, isUser: widget.isUser ?? true),
+      TempleScreen(profileType: profileType, isUser: widget.isUser ?? true),
+      SavedScreen(profileType: profileType, isUser: widget.isUser ?? true),
+      if (widget.isUser == true)
+        MyFamilyScreen(profileType: profileType, isUser: widget.isUser ?? true),
+      UserProfileScreen(
+        profileType: profileType,
+        isUser: widget.isUser ?? true,
+      ),
     ];
 
     return PopScope(

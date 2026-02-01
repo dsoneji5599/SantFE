@@ -49,6 +49,8 @@ class HomeUrls {
   static String deleteTemple = 'temple/delete_temple';
   static String getFamily = 'user_family/get_family_member';
   static String addFamily = 'user_family/add_user_family_member';
+  static String editFamily = 'user_family/update_member_details';
+  static String removeFamilyMember = 'user_family/delete_member_details';
 }
 
 class LocationURLs {

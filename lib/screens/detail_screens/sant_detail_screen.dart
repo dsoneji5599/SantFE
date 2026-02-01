@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
+import 'package:sant_app/models/saved_sant_list_model.dart';
 import 'package:sant_app/provider/location_provider.dart';
 import 'package:sant_app/screens/detail_screens/journey_history_detail.dart';
 import 'package:sant_app/screens/detail_screens/sant_last_location.dart';
@@ -12,7 +13,7 @@ import 'package:sant_app/utils/extensions.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 
 class SantDetailScreen extends StatelessWidget {
-  final SantListModel sant;
+  final SantViewData sant;
 
   const SantDetailScreen({super.key, required this.sant});
 
@@ -34,11 +35,11 @@ class SantDetailScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios,
                       color: Colors.white,
                       size: 20,
@@ -51,7 +52,7 @@ class SantDetailScreen extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 24),
+                  SizedBox(width: 50),
                 ],
               ),
             ),
@@ -190,7 +191,7 @@ class SantDetailScreen extends StatelessWidget {
                                     padding: EdgeInsets.only(bottom: 5, top: 5),
                                     child: e,
                                   ),
-                                  Divider(color: Colors.black12),
+                                  Divider(color: Colors.black12, height: 20),
                                 ],
                               ),
                             )
@@ -290,25 +291,83 @@ class SantDetailScreen extends StatelessWidget {
       children: [
         if (image != null) Image.asset(image, height: 16, width: 16),
         if (icon != null) Icon(icon, size: 16, color: AppColors.appOrange),
-
         SizedBox(width: 10),
-        Text(
-          "$key : ",
-          style: AppFonts.outfitBlack.copyWith(
-            color: Color(0xFF4D4D4D),
-            fontSize: 16,
-          ),
-        ),
-        Flexible(
-          child: Text(
-            value,
-            style: AppFonts.outfitBlack.copyWith(
-              color: Color(0xFFB1B1B1),
-              fontSize: 16,
+
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: AppFonts.outfitBlack.copyWith(fontSize: 16),
+              children: [
+                TextSpan(
+                  text: "$key : ",
+                  style: TextStyle(color: Color(0xFF4D4D4D)),
+                ),
+                TextSpan(
+                  text: value,
+                  style: TextStyle(color: Color(0xFFB1B1B1)),
+                ),
+              ],
             ),
           ),
         ),
       ],
     );
   }
+}
+
+class SantViewData {
+  final String? saintId;
+  final String? name;
+  final String? profileImage;
+  final String? salutation;
+  final String? samajName;
+  final String? gender;
+  final String? mobile;
+  final String? email;
+  final String? upadhi;
+  final String? dikshaPlace;
+  final DateTime? dob;
+  final DateTime? dikshaDate;
+  final String? tapasyaDetails;
+  final String? knowledgeDetails;
+  final String? viharDetails;
+  final dynamic currentLocation;
+
+  SantViewData.fromSantList(SantListModel s)
+    : saintId = s.saintId,
+      name = s.name,
+      profileImage = s.profileImage,
+      salutation = s.salutation,
+      samajName = s.samajName,
+      gender = s.gender,
+      mobile = s.mobile,
+      email = s.email,
+      upadhi = s.upadhi,
+      dikshaPlace = s.dikshaPlace,
+      dob = s.dob,
+      dikshaDate = s.dikshaDate,
+      tapasyaDetails = s.tapasyaDetails,
+      knowledgeDetails = s.knowledgeDetails,
+      viharDetails = s.viharDetails,
+      currentLocation = s.currentLocation;
+
+  SantViewData.fromSaved(SavedSantListModel s)
+    : saintId = s.saintId,
+      name = s.name,
+      profileImage = s.profileImage,
+      salutation = s.salutation,
+      samajName = s.samajName,
+      gender = s.gender,
+      mobile = s.mobile,
+      email = s.email,
+      upadhi = s.upadhi,
+      dikshaPlace = s.dikshaPlace,
+      dob = s.dob,
+      dikshaDate = s.dikshaDate != null
+          ? DateTime.tryParse(s.dikshaDate!)
+          : null,
+      tapasyaDetails = s.tapasyaDetails,
+      knowledgeDetails = s.knowledgeDetails,
+      viharDetails = s.viharDetails,
+      currentLocation = null;
 }

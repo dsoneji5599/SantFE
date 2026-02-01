@@ -16,7 +16,10 @@ import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/keys.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  const UserProfileScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const UserProfileScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -53,39 +56,53 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   // AppBar
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        InkWell(
-                          onTap: () {
-                            Keys.scaffoldKey.currentState?.openDrawer();
-                          },
-                          child: Icon(
-                            Icons.menu,
-                            size: 24,
-                            color: Colors.white,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Keys.scaffoldKey.currentState?.openDrawer();
+                              },
+                              icon: Icon(
+                                Icons.menu,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              value?.name ?? "Profile",
+                              style: AppFonts.outfitBlack.copyWith(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                navigatorPush(
+                                  context,
+                                  UpdateUserProfileScreen(isUser: isUser),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          value?.name ?? "Profile",
-                          style: AppFonts.outfitBlack.copyWith(
-                            fontSize: 20,
-                            color: Colors.white,
+                        if (widget.isUser == false &&
+                            widget.profileType != null)
+                          Text(
+                            widget.profileType!.toUpperCase(),
+                            style: AppFonts.outfitBlack.copyWith(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            navigatorPush(
-                              context,
-                              UpdateUserProfileScreen(isUser: isUser),
-                            );
-                          },
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -249,39 +266,53 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   // AppBar
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        InkWell(
-                          onTap: () {
-                            Keys.scaffoldKey.currentState?.openDrawer();
-                          },
-                          child: Icon(
-                            Icons.menu,
-                            size: 24,
-                            color: Colors.white,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Keys.scaffoldKey.currentState?.openDrawer();
+                              },
+                              icon: Icon(
+                                Icons.menu,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              value?.name ?? "Profile",
+                              style: AppFonts.outfitBlack.copyWith(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                navigatorPush(
+                                  context,
+                                  UpdateUserProfileScreen(isUser: isUser),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          value?.name ?? "Profile",
-                          style: AppFonts.outfitBlack.copyWith(
-                            fontSize: 20,
-                            color: Colors.white,
+                        if (widget.isUser == false &&
+                            widget.profileType != null)
+                          Text(
+                            widget.profileType!.toUpperCase(),
+                            style: AppFonts.outfitBlack.copyWith(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            navigatorPush(
-                              context,
-                              UpdateUserProfileScreen(isUser: isUser),
-                            );
-                          },
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -492,30 +523,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     IconData? icon,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (image != null) Image.asset(image, height: 16, width: 16),
-            if (icon != null) Icon(icon, size: 16, color: AppColors.appOrange),
-            SizedBox(width: 10),
-            Text(
-              "$key : ",
-              style: AppFonts.outfitBlack.copyWith(
-                color: Color(0xFF4D4D4D),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
+        if (image != null) Image.asset(image, height: 16, width: 16),
+        if (icon != null) Icon(icon, size: 16, color: AppColors.appOrange),
+        SizedBox(width: 10),
 
-        Flexible(
-          child: Text(
-            value,
-            style: AppFonts.outfitBlack.copyWith(
-              color: Color(0xFFB1B1B1),
-              fontSize: 16,
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: AppFonts.outfitBlack.copyWith(fontSize: 16),
+              children: [
+                TextSpan(
+                  text: "$key : ",
+                  style: TextStyle(color: Color(0xFF4D4D4D)),
+                ),
+                TextSpan(
+                  text: value,
+                  style: TextStyle(color: Color(0xFFB1B1B1)),
+                ),
+              ],
             ),
           ),
         ),

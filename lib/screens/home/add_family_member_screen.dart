@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +52,24 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   DateTime? _selectedDob;
   DateTime? _selectedMarriageDate;
 
+  // Store original values for edit comparison
+  String? _originalName;
+  String? _originalDob;
+  String? _originalQualification;
+  String? _originalOccupation;
+  String? _originalNatureOfBusiness;
+  String? _originalGachh;
+  String? _originalFatherName;
+  String? _originalMotherName;
+  String? _originalSpouseName;
+  String? _originalDom;
+  String? _originalPhone;
+  String? _originalCity;
+  String? _originalDistrict;
+  String? _originalState;
+  String? _originalCountry;
+  List<Map<String, dynamic>>? _originalChildrenData;
+
   String? selectedCity;
   String? selectedDistrict;
   String? selectedState;
@@ -78,6 +98,23 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
 
+  bool _hasChildrenDataChanged(List<Map<String, dynamic>> currentData) {
+    if (_originalChildrenData == null) return false;
+    if (currentData.length != _originalChildrenData!.length) return true;
+
+    for (int i = 0; i < currentData.length; i++) {
+      if (currentData[i]["child_name"] !=
+              _originalChildrenData![i]["child_name"] ||
+          currentData[i]["child_gender"] !=
+              _originalChildrenData![i]["child_gender"] ||
+          currentData[i]["child_dob"] !=
+              _originalChildrenData![i]["child_dob"]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,27 +129,57 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       final f = widget.family!;
 
       _nameController.text = f.name ?? '';
+      _originalName = f.name;
+
       _dobController.text = (f.dob is DateTime)
           ? _formatDate(f.dob as DateTime)
           : (f.dob?.toString() ?? '');
+      _originalDob = _dobController.text;
+
       _qualificationController.text = f.qualification ?? '';
+      _originalQualification = f.qualification;
+
       _occupationController.text = f.occupation ?? '';
+      _originalOccupation = f.occupation;
+
       _natureOfBusinessController.text = f.natureOfBusiness ?? '';
+      _originalNatureOfBusiness = f.natureOfBusiness;
+
       _gacchController.text = f.gachh ?? '';
+      _originalGachh = f.gachh;
+
       _fatherNameController.text = f.fatherName ?? '';
+      _originalFatherName = f.fatherName;
+
       _motherNameController.text = f.motherName ?? '';
+      _originalMotherName = f.motherName;
+
       _spouseNameController.text = f.spouseName ?? '';
+      _originalSpouseName = f.spouseName;
+
       _dateOfMarriageController.text = (f.dom is DateTime)
           ? _formatDate(f.dom as DateTime)
           : (f.dom?.toString() ?? '');
+      _originalDom = _dateOfMarriageController.text;
+
       _phoneController.text = f.mobile ?? '';
+      _originalPhone = f.mobile;
+
       selectedCountry = f.country;
+      _originalCountry = f.country;
+
       selectedState = f.state;
+      _originalState = f.state;
+
       selectedCity = f.city;
+      _originalCity = f.city;
+
       selectedDistrict = f.district;
+      _originalDistrict = f.district;
 
       if (f.childrenDetails != null) {
         _children.clear();
+        _originalChildrenData = [];
         for (var c in f.childrenDetails!) {
           _children.add(
             _ChildForm(
@@ -121,6 +188,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
               gender: c["child_gender"] ?? "Male",
             ),
           );
+          _originalChildrenData!.add({
+            "child_name": c["child_name"] ?? '',
+            "child_gender": c["child_gender"] ?? "Male",
+            "child_dob": c["child_dob"] ?? '',
+          });
         }
       }
     }
@@ -147,7 +219,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     ),
                   ),
                   Text(
-                    "Add Family Details",
+                    widget.isDetail == true
+                        ? "Family Details"
+                        : (widget.isEdit == true
+                              ? "Edit Family Member"
+                              : "Add Family Details"),
                     style: AppFonts.outfitBlack.copyWith(
                       fontSize: 20,
                       color: Colors.white,
@@ -211,13 +287,36 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                       : null,
                                 ),
                                 child: _pickedImage == null
-                                    ? const Center(
-                                        child: Icon(
-                                          Icons.add_photo_alternate,
-                                          color: Colors.grey,
-                                          size: 40,
-                                        ),
-                                      )
+                                    ? (widget.family?.profileImage != null &&
+                                              widget
+                                                  .family!
+                                                  .profileImage!
+                                                  .isNotEmpty
+                                          ? CachedNetworkImage(
+                                              imageUrl:
+                                                  widget.family!.profileImage!,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) =>
+                                                  const Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  ),
+                                              errorWidget:
+                                                  (context, url, error) => Icon(
+                                                    Icons.person,
+                                                    color: Colors.grey.shade400,
+                                                    size: 40,
+                                                  ),
+                                            )
+                                          : const Center(
+                                              child: Icon(
+                                                Icons.add_photo_alternate,
+                                                color: Colors.grey,
+                                                size: 40,
+                                              ),
+                                            ))
                                     : null,
                               ),
                             ),
@@ -541,11 +640,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                     return;
                                   }
 
-                                  if (_pickedImage == null &&
-                                      widget.family == null) {
-                                    toastMessage("Please select an image!");
-                                    return;
-                                  }
+                                  // if (_pickedImage == null &&
+                                  //     widget.family == null) {
+                                  //   toastMessage("Please select an image!");
+                                  //   return;
+                                  // }
 
                                   for (var c in _children) {
                                     if (c.name.text.isEmpty ||
@@ -583,31 +682,128 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                         "${_selectedMarriageDate!.year.toString().padLeft(4, '0')}-${_selectedMarriageDate!.month.toString().padLeft(2, '0')}-${_selectedMarriageDate!.day.toString().padLeft(2, '0')}";
                                   }
 
-                                  Map<String, dynamic> data = {
-                                    "name": _nameController.text,
-                                    "dob": formattedDob,
-                                    "qualification":
-                                        _qualificationController.text,
-                                    "occupation": _occupationController.text,
-                                    "nature_of_business":
-                                        _natureOfBusinessController.text,
-                                    "gachh": _gacchController.text,
-                                    "father_name": _fatherNameController.text,
-                                    "mother_name": _motherNameController.text,
-                                    "spouse_name": _spouseNameController.text,
-                                    "dom": formattedDom,
-                                    "phone": _phoneController.text,
-                                    "city": selectedCity,
-                                    "district": selectedDistrict,
-                                    "state": selectedState,
-                                    "country": selectedCountry,
-                                    "children_details": childrenData,
-                                  };
+                                  String? base64Image;
+                                  if (_pickedImage != null) {
+                                    final bytes = await File(
+                                      _pickedImage!.path,
+                                    ).readAsBytes();
+                                    base64Image = base64Encode(bytes);
+                                  }
 
-                                  bool success = await provider.addFamily(
-                                    data: data,
-                                  );
-                                  if (success) Navigator.pop(context);
+                                  Map<String, dynamic> data = {};
+
+                                  if (widget.isEdit == true) {
+                                    // Only add fields that have changed
+                                    if (_nameController.text !=
+                                        (_originalName ?? '')) {
+                                      data["name"] = _nameController.text;
+                                    }
+                                    if (_dobController.text !=
+                                        (_originalDob ?? '')) {
+                                      data["dob"] = formattedDob;
+                                    }
+                                    if (_qualificationController.text !=
+                                        (_originalQualification ?? '')) {
+                                      data["qualification"] =
+                                          _qualificationController.text;
+                                    }
+                                    if (_occupationController.text !=
+                                        (_originalOccupation ?? '')) {
+                                      data["occupation"] =
+                                          _occupationController.text;
+                                    }
+                                    if (_natureOfBusinessController.text !=
+                                        (_originalNatureOfBusiness ?? '')) {
+                                      data["nature_of_business"] =
+                                          _natureOfBusinessController.text;
+                                    }
+                                    if (_gacchController.text !=
+                                        (_originalGachh ?? '')) {
+                                      data["gachh"] = _gacchController.text;
+                                    }
+                                    if (_fatherNameController.text !=
+                                        (_originalFatherName ?? '')) {
+                                      data["father_name"] =
+                                          _fatherNameController.text;
+                                    }
+                                    if (_motherNameController.text !=
+                                        (_originalMotherName ?? '')) {
+                                      data["mother_name"] =
+                                          _motherNameController.text;
+                                    }
+                                    if (_spouseNameController.text !=
+                                        (_originalSpouseName ?? '')) {
+                                      data["spouse_name"] =
+                                          _spouseNameController.text;
+                                    }
+                                    if (_dateOfMarriageController.text !=
+                                        (_originalDom ?? '')) {
+                                      data["dom"] = formattedDom;
+                                    }
+                                    if (_phoneController.text !=
+                                        (_originalPhone ?? '')) {
+                                      data["mobile"] = _phoneController.text;
+                                    }
+                                    if (selectedCity != _originalCity) {
+                                      data["city"] = selectedCity;
+                                    }
+                                    if (selectedDistrict != _originalDistrict) {
+                                      data["district"] = selectedDistrict;
+                                    }
+                                    if (selectedState != _originalState) {
+                                      data["state"] = selectedState;
+                                    }
+                                    if (selectedCountry != _originalCountry) {
+                                      data["country"] = selectedCountry;
+                                    }
+                                    if (_hasChildrenDataChanged(childrenData)) {
+                                      data["children_details"] = childrenData;
+                                    }
+
+                                    if (base64Image != null) {
+                                      data["profile_image"] = base64Image;
+                                    }
+                                  } else {
+                                    // For new family members, include all fields
+                                    data = {
+                                      "name": _nameController.text,
+                                      "dob": formattedDob,
+                                      "qualification":
+                                          _qualificationController.text,
+                                      "occupation": _occupationController.text,
+                                      "nature_of_business":
+                                          _natureOfBusinessController.text,
+                                      "gachh": _gacchController.text,
+                                      "father_name": _fatherNameController.text,
+                                      "mother_name": _motherNameController.text,
+                                      "spouse_name": _spouseNameController.text,
+                                      "dom": formattedDom,
+                                      "mobile": _phoneController.text,
+                                      "city": selectedCity,
+                                      "district": selectedDistrict,
+                                      "state": selectedState,
+                                      "country": selectedCountry,
+                                      "children_details": childrenData,
+                                    };
+
+                                    if (base64Image != null) {
+                                      data["profile_image"] = base64Image;
+                                    }
+                                  }
+
+                                  if (widget.isEdit == true) {
+                                    bool success = await provider.editFamily(
+                                      data: data,
+                                      userFamilyId:
+                                          widget.family?.userFamilyId ?? '',
+                                    );
+                                    if (success) Navigator.pop(context);
+                                  } else {
+                                    bool success = await provider.addFamily(
+                                      data: data,
+                                    );
+                                    if (success) Navigator.pop(context);
+                                  }
                                 },
                               ),
                           ]

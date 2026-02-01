@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sant_app/models/sant_list_model.dart';
+import 'package:sant_app/provider/sant_provider.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 import 'group_detail_screen.dart';
@@ -44,14 +47,31 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (message.isEmpty) return;
 
     final userDoc = await _firestore.collection('users').doc(user.uid).get();
-    String? senderName =
-        userDoc.data()?['name'] ??
-        user.displayName ??
-        user.email?.split('@').first;
 
-    if (senderName == null || senderName.trim().isEmpty) {
-      senderName = "Unnamed";
+    final santList = context.read<SantProvider>().santList;
+
+    final email = (userDoc.data()?['email'] ?? "").toString().toLowerCase();
+
+    String phone = (userDoc.data()?['phone'] ?? "").toString();
+    phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phone.length > 10) {
+      phone = phone.substring(phone.length - 10);
     }
+
+    final matchedSant = santList.firstWhere(
+      (s) =>
+          s.firebaseUid == user.uid ||
+          (email.isNotEmpty && (s.email ?? "").toLowerCase() == email) ||
+          (phone.isNotEmpty &&
+              (s.mobile ?? "")
+                  .replaceAll(RegExp(r'[^0-9]'), '')
+                  .endsWith(phone)),
+      orElse: () => SantListModel(),
+    );
+
+    String senderName = matchedSant.name?.isNotEmpty == true
+        ? matchedSant.name!
+        : "Unnamed";
 
     await _firestore
         .collection('groups')
@@ -282,17 +302,29 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   itemBuilder: (context, index) {
                     final msg = messages[index];
                     final messageText = msg['text'] ?? '';
-                    final senderName = msg['senderName'] ?? 'Unknown';
                     final senderId = msg['senderId'] ?? '';
+
+                    final santList = context.read<SantProvider>().santList;
+
+                    final matchedSant = santList.firstWhere(
+                      (s) => s.firebaseUid == senderId,
+                      orElse: () => SantListModel(),
+                    );
+
+                    final resolvedName = matchedSant.name?.isNotEmpty == true
+                        ? matchedSant.name!
+                        : (msg['senderName'] ?? 'Unnamed');
+
+                    final isMe = senderId == _auth.currentUser?.uid;
+
+                    final displayName = isMe ? "You" : resolvedName;
+
                     final timestamp = msg['timestamp'] as Timestamp?;
                     final timeString = timestamp != null
                         ? TimeOfDay.fromDateTime(
                             timestamp.toDate(),
                           ).format(context)
                         : '';
-
-                    final isMe = senderId == _auth.currentUser?.uid;
-                    final displayName = isMe ? "You" : senderName;
 
                     return Align(
                       alignment: isMe

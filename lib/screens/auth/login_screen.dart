@@ -153,7 +153,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               .doc(value.user?.uid)
                               .set({
                                 'uid': value.user?.uid ?? '',
-                                'name': value.user?.displayName ?? '',
+                                'name':
+                                    (value.user?.displayName?.isNotEmpty ==
+                                        true)
+                                    ? value.user!.displayName
+                                    : (value.user?.email?.split('@').first ??
+                                          ''),
                                 'email': value.user?.email ?? '',
                                 'photoUrl': value.user?.photoURL ?? '',
                                 'phone': '',
@@ -337,7 +342,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 .doc(value.user?.uid)
                                 .set({
                                   'uid': value.user?.uid ?? '',
-                                  'name': value.user?.displayName ?? '',
+                                  'name':
+                                      (value.user?.displayName?.isNotEmpty ==
+                                          true)
+                                      ? value.user!.displayName
+                                      : (value.user?.email?.split('@').first ??
+                                            ''),
                                   'email': value.user?.email ?? '',
                                   'photoUrl': value.user?.photoURL ?? '',
                                   'phone': '',

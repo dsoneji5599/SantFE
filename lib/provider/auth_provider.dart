@@ -46,6 +46,7 @@ class AuthProvider extends ChangeNotifier {
         userId = response["data"]["user_id"];
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
+        String? profileType = response["data"]["profile_type"];
 
         MySharedPreferences.instance.setStringValue("user_id", userId);
         MySharedPreferences.instance.setStringValue(
@@ -56,6 +57,12 @@ class AuthProvider extends ChangeNotifier {
           "refresh_token",
           refreshToken,
         );
+        if (profileType != null) {
+          MySharedPreferences.instance.setStringValue(
+            "profile_type",
+            profileType,
+          );
+        }
 
         await getToken();
         return true;
@@ -89,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
         userId = response["data"]["user_id"];
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
+        String? profileType = response["data"]["profile_type"];
 
         MySharedPreferences.instance.setStringValue("user_id", userId);
         MySharedPreferences.instance.setStringValue(
@@ -99,6 +107,12 @@ class AuthProvider extends ChangeNotifier {
           "refresh_token",
           refreshToken,
         );
+        if (profileType != null) {
+          MySharedPreferences.instance.setStringValue(
+            "profile_type",
+            profileType,
+          );
+        }
 
         await getToken();
         return true;
@@ -166,6 +180,7 @@ class AuthProvider extends ChangeNotifier {
 
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
+        String? profileType = response["data"]["profile_type"];
 
         MySharedPreferences.instance.setStringValue("user_id", userId);
         MySharedPreferences.instance.setStringValue(
@@ -176,6 +191,12 @@ class AuthProvider extends ChangeNotifier {
           "refresh_token",
           refreshToken,
         );
+        if (profileType != null) {
+          MySharedPreferences.instance.setStringValue(
+            "profile_type",
+            profileType,
+          );
+        }
 
         await getToken();
         return "success";
@@ -208,6 +229,7 @@ class AuthProvider extends ChangeNotifier {
 
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
+        String? profileType = response["data"]["profile_type"];
 
         MySharedPreferences.instance.setStringValue("user_id", userId);
         MySharedPreferences.instance.setStringValue(
@@ -218,6 +240,12 @@ class AuthProvider extends ChangeNotifier {
           "refresh_token",
           refreshToken,
         );
+        if (profileType != null) {
+          MySharedPreferences.instance.setStringValue(
+            "profile_type",
+            profileType,
+          );
+        }
 
         await getToken();
         return "success";
@@ -275,6 +303,7 @@ class AuthProvider extends ChangeNotifier {
       if (statusCode == 200) {
         accessToken = response["data"]["access_token"];
         refreshToken = response["data"]["refresh_token"];
+        String? profileType = response["data"]["profile_type"];
 
         MySharedPreferences.instance.setStringValue("user_id", userId);
         MySharedPreferences.instance.setStringValue(
@@ -285,6 +314,12 @@ class AuthProvider extends ChangeNotifier {
           "refresh_token",
           refreshToken,
         );
+        if (profileType != null) {
+          MySharedPreferences.instance.setStringValue(
+            "profile_type",
+            profileType,
+          );
+        }
 
         toastMessage('Successfully Login as Bhai');
 

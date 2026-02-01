@@ -76,9 +76,9 @@ class _SantLastLocationState extends State<SantLastLocation> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
                     Icons.arrow_back_ios,
                     size: 24,
                     color: Colors.white,

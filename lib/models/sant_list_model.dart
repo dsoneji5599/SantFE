@@ -31,6 +31,8 @@ class SantListModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool? isBookmarked;
+  final String? bookmarkId;
+
   final String? approvalStatus;
   final CurrentLocation? currentLocation;
 
@@ -67,6 +69,7 @@ class SantListModel {
     this.createdAt,
     this.updatedAt,
     this.isBookmarked,
+    this.bookmarkId,
     this.approvalStatus,
     this.currentLocation,
   });
@@ -110,6 +113,7 @@ class SantListModel {
         ? null
         : DateTime.parse(json["updated_at"]),
     isBookmarked: json["is_bookmarked"],
+    bookmarkId: json["bookmark_id"],
     approvalStatus: json["approval_status"],
     currentLocation: json["current_location"] == null
         ? null

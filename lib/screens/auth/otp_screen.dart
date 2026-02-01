@@ -230,6 +230,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                 );
                               }
                             } catch (e) {
+                              if (loaderCtx != null) {
+                                Navigator.pop(loaderCtx!);
+                              }
                               toastMessage("An error occurred. Try again.");
                             }
                           }
@@ -291,7 +294,9 @@ class _OtpScreenState extends State<OtpScreen> {
                           .doc(user.user?.uid)
                           .set({
                             'uid': user.user?.uid ?? '',
-                            'name': user.user?.displayName ?? '',
+                            'name': (user.user?.displayName?.isNotEmpty == true)
+                                ? user.user!.displayName
+                                : (user.user?.phoneNumber ?? ''),
                             'email': '',
                             'photoUrl': user.user?.photoURL ?? '',
                             'phone': user.user?.phoneNumber ?? '',

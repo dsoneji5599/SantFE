@@ -3,15 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/saved_sant_list_model.dart';
 import 'package:sant_app/provider/sant_provider.dart';
+import 'package:sant_app/screens/detail_screens/sant_detail_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/widgets/app_drawer.dart';
+import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/keys.dart';
 
 class SavedScreen extends StatefulWidget {
-  const SavedScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const SavedScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<SavedScreen> createState() => _SavedScreenState();
@@ -20,6 +25,9 @@ class SavedScreen extends StatefulWidget {
 class _SavedScreenState extends State<SavedScreen> {
   late SantProvider provider;
   bool isLoading = true;
+
+  bool isUser = true;
+  String? profileType;
 
   @override
   void initState() {
@@ -54,15 +62,11 @@ class _SavedScreenState extends State<SavedScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        InkWell(
-                          onTap: () {
+                        IconButton(
+                          onPressed: () {
                             Keys.scaffoldKey.currentState?.openDrawer();
                           },
-                          child: Icon(
-                            Icons.menu,
-                            size: 24,
-                            color: Colors.white,
-                          ),
+                          icon: Icon(Icons.menu, size: 24, color: Colors.white),
                         ),
                         Image.asset(
                           AppLogos.homeLogo,
@@ -72,6 +76,15 @@ class _SavedScreenState extends State<SavedScreen> {
                         SizedBox(width: 24),
                       ],
                     ),
+                    if (widget.isUser == false && widget.profileType != null)
+                      Text(
+                        widget.profileType!.toUpperCase(),
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
                     SizedBox(height: 35),
 
@@ -107,7 +120,10 @@ class SantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // navigatorPush(context, SantDetailScreen(sant: sant));
+        navigatorPush(
+          context,
+          SantDetailScreen(sant: SantViewData.fromSaved(sant)),
+        );
       },
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 25),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,10 @@ import 'package:sant_app/widgets/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const SearchScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -51,6 +55,9 @@ class _SearchScreenState extends State<SearchScreen> {
   bool isJourneyStarted = false;
   LatLng? _currentDestination;
 
+  bool isUser = true;
+  String? profileType;
+
   bool _isFetchingDirections = false;
 
   @override
@@ -67,31 +74,44 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  Future<BitmapDescriptor> _getCircularMarker({int size = 150}) async {
-    // Create a PictureRecorder for drawing
+  Future<BitmapDescriptor> _getCircularMarker({
+    String? imageUrl,
+    int size = 150,
+  }) async {
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
     final paint = Paint()..isAntiAlias = true;
 
-    // Define radius & center
     final double radius = size / 2;
     final center = Offset(radius, radius);
 
-    // Draw outer orange circle
+    // Outer circle
     paint.color = const Color(0xFFF3821E);
     canvas.drawCircle(center, radius, paint);
 
-    // Load the logo image
-    final ByteData data = await rootBundle.load(AppLogos.appLogo);
-    final codec = await instantiateImageCodec(
-      data.buffer.asUint8List(),
-      targetWidth: (size * 0.75).toInt(),
-      targetHeight: (size * 0.75).toInt(),
-    );
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
+    ui.Image image;
 
-    // Draw circular clipped image in center
+    // 🔥 LOAD FROM API IF AVAILABLE
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      try {
+        final response = await http.get(Uri.parse(imageUrl));
+        final codec = await instantiateImageCodec(
+          response.bodyBytes,
+          targetWidth: (size * 0.75).toInt(),
+          targetHeight: (size * 0.75).toInt(),
+        );
+        image = (await codec.getNextFrame()).image;
+      } catch (_) {
+        final data = await rootBundle.load(AppLogos.appLogo);
+        final codec = await instantiateImageCodec(data.buffer.asUint8List());
+        image = (await codec.getNextFrame()).image;
+      }
+    } else {
+      final data = await rootBundle.load(AppLogos.appLogo);
+      final codec = await instantiateImageCodec(data.buffer.asUint8List());
+      image = (await codec.getNextFrame()).image;
+    }
+
     final imgRadius = radius * 0.75;
     final imgOffset = Offset(radius - imgRadius, radius - imgRadius);
     final imgRect = Rect.fromLTWH(
@@ -102,24 +122,25 @@ class _SearchScreenState extends State<SearchScreen> {
     );
 
     final imgPaint = Paint()..isAntiAlias = true;
+
     canvas.saveLayer(imgRect, Paint());
     canvas.drawCircle(center, imgRadius, imgPaint);
     imgPaint.blendMode = BlendMode.srcIn;
+
     canvas.drawImageRect(
       image,
       Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
       imgRect,
       imgPaint,
     );
+
     canvas.restore();
 
-    // Convert to bytes
     final picture = recorder.endRecording();
     final imgFinal = await picture.toImage(size, size);
     final byteData = await imgFinal.toByteData(format: ImageByteFormat.png);
-    final bytes = byteData!.buffer.asUint8List();
 
-    return BitmapDescriptor.fromBytes(bytes);
+    return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
   LatLngBounds _createLatLngBoundsFromMarkers(List<Marker> markers) {
@@ -184,12 +205,14 @@ class _SearchScreenState extends State<SearchScreen> {
       );
 
       if (provider.nearbySantList.isNotEmpty) {
-        final BitmapDescriptor currentMarkerIcon = await _getCircularMarker(
-          size: 130,
-        );
         Set<Marker> santMarkers = {};
 
         for (final sant in provider.nearbySantList) {
+          final BitmapDescriptor currentMarkerIcon = await _getCircularMarker(
+            imageUrl: sant.saintDetail.profileImage,
+            size: 130,
+          );
+
           final journey = sant.journeyDetail;
           final from = LatLng(journey.startLatitude, journey.startLongitude);
           final to = LatLng(journey.endLatitude, journey.endLongitude);
@@ -620,34 +643,48 @@ class _SearchScreenState extends State<SearchScreen> {
                 Column(
                   children: [
                     const SizedBox(height: 60),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    Column(
                       children: [
-                        InkWell(
-                          onTap: () {
-                            Keys.scaffoldKey.currentState?.openDrawer();
-                          },
-                          child: const Icon(
-                            Icons.menu,
-                            size: 24,
-                            color: Colors.white,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                Keys.scaffoldKey.currentState?.openDrawer();
+                              },
+                              child: const Icon(
+                                Icons.menu,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Image.asset(
+                              AppLogos.homeLogo,
+                              height: 50,
+                              color: Colors.white,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                _showFilterDialog();
+                              },
+                              child: Icon(
+                                Icons.filter_alt_outlined,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (widget.isUser == false &&
+                            widget.profileType != null)
+                          Text(
+                            widget.profileType!.toUpperCase(),
+                            style: AppFonts.outfitBlack.copyWith(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        Image.asset(
-                          AppLogos.homeLogo,
-                          height: 50,
-                          color: Colors.white,
-                        ),
-                        InkWell(
-                          onTap: () {
-                            _showFilterDialog();
-                          },
-                          child: Icon(
-                            Icons.filter_alt_outlined,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 30),

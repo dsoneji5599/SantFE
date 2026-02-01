@@ -72,35 +72,35 @@ class _AppDrawerState extends State<AppDrawer> {
     String? name,
     String? location,
   }) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        navigatorPushReplacement(
-          context,
-          App(isUser: isUser, myIndex: isUser == true ? 5 : 4),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.appOrange, Colors.white, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.appOrange, Colors.white, Colors.white],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 150,
-            horizontal: 15,
-          ).copyWith(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                children: [
-                  ListTile(
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 150,
+          horizontal: 15,
+        ).copyWith(bottom: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              children: [
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    navigatorPushReplacement(
+                      context,
+                      App(isUser: isUser, myIndex: isUser == true ? 5 : 4),
+                    );
+                  },
+                  child: ListTile(
                     title: Row(
                       children: [
                         SizedBox(
@@ -154,84 +154,84 @@ class _AppDrawerState extends State<AppDrawer> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 50),
-                  if (isUser == false)
-                    ListTile(
-                      leading: Icon(
-                        Icons.navigation_outlined,
-                        color: AppColors.appOrange,
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.appGrey.withValues(alpha: 0.5),
-                      ),
-                      title: Text('Add Direction'),
-                      onTap: () {
-                        Keys.scaffoldKey.currentState?.closeDrawer();
-                        navigatorPush(context, AddDirectionScreen());
-                      },
-                    ),
-                  if (isUser == false)
-                    ListTile(
-                      leading: Icon(
-                        Icons.location_on_outlined,
-                        color: AppColors.appOrange,
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.appGrey.withValues(alpha: 0.5),
-                      ),
-                      title: Text('Journey History'),
-                      onTap: () {
-                        Keys.scaffoldKey.currentState?.closeDrawer();
-                        navigatorPush(context, SantJourneyHistoryScreen());
-                      },
-                    ),
+                ),
+                SizedBox(height: 50),
+                if (isUser == false)
                   ListTile(
-                    leading: Icon(Icons.event, color: AppColors.appOrange),
+                    leading: Icon(
+                      Icons.navigation_outlined,
+                      color: AppColors.appOrange,
+                    ),
                     trailing: Icon(
                       Icons.arrow_forward_ios,
                       color: AppColors.appGrey.withValues(alpha: 0.5),
                     ),
-                    title: Text('Events'),
+                    title: Text('Add Direction'),
                     onTap: () {
                       Keys.scaffoldKey.currentState?.closeDrawer();
-                      navigatorPush(context, EventScreen());
+                      navigatorPush(context, AddDirectionScreen());
                     },
                   ),
-                  if (isUser == false)
-                    ListTile(
-                      leading: Icon(
-                        Icons.chat_outlined,
-                        color: AppColors.appOrange,
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.appGrey.withValues(alpha: 0.5),
-                      ),
-                      title: Text('Chat'),
-                      onTap: () {
-                        Keys.scaffoldKey.currentState?.closeDrawer();
-                        navigatorPush(context, ChatListScreen());
-                      },
+                if (isUser == false)
+                  ListTile(
+                    leading: Icon(
+                      Icons.location_on_outlined,
+                      color: AppColors.appOrange,
                     ),
-                ],
-              ),
-              ListTile(
-                leading: Icon(Icons.logout, color: AppColors.appOrange),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.appGrey.withValues(alpha: 0.5),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.appGrey.withValues(alpha: 0.5),
+                    ),
+                    title: Text('Journey History'),
+                    onTap: () {
+                      Keys.scaffoldKey.currentState?.closeDrawer();
+                      navigatorPush(context, SantJourneyHistoryScreen());
+                    },
+                  ),
+                ListTile(
+                  leading: Icon(Icons.event, color: AppColors.appOrange),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.appGrey.withValues(alpha: 0.5),
+                  ),
+                  title: Text('Events'),
+                  onTap: () {
+                    Keys.scaffoldKey.currentState?.closeDrawer();
+                    navigatorPush(context, EventScreen());
+                  },
                 ),
-                title: Text('Sign Out'),
-                onTap: () {
-                  signOut().then((value) {
-                    navigatorPushReplacement(context, OnboardingScreen());
-                  });
-                },
+                if (isUser == false)
+                  ListTile(
+                    leading: Icon(
+                      Icons.chat_outlined,
+                      color: AppColors.appOrange,
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.appGrey.withValues(alpha: 0.5),
+                    ),
+                    title: Text('Chat'),
+                    onTap: () {
+                      Keys.scaffoldKey.currentState?.closeDrawer();
+                      navigatorPush(context, ChatListScreen());
+                    },
+                  ),
+              ],
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: AppColors.appOrange),
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                color: AppColors.appGrey.withValues(alpha: 0.5),
               ),
-            ],
-          ),
+              title: Text('Sign Out'),
+              onTap: () {
+                signOut().then((value) {
+                  navigatorPushReplacement(context, OnboardingScreen());
+                });
+              },
+            ),
+          ],
         ),
       ),
     );

@@ -53,14 +53,15 @@ class _EventScreenState extends State<EventScreen> {
                   children: [
                     SizedBox(height: 60),
 
+                    // AppBar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        InkWell(
-                          onTap: () {
+                        IconButton(
+                          onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: Icon(
+                          icon: Icon(
                             Icons.arrow_back_ios,
                             size: 24,
                             color: Colors.white,

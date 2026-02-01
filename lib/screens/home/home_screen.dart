@@ -14,7 +14,6 @@ import 'package:sant_app/screens/detail_screens/sant_detail_screen.dart';
 import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
-import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_drawer.dart';
 import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
@@ -22,7 +21,10 @@ import 'package:sant_app/widgets/keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? profileType;
+  final bool? isUser;
+
+  const HomeScreen({super.key, this.profileType, this.isUser});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,6 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late UtilProvider utilProvider;
   late LocationProvider locationProvider;
   bool isLoading = true;
+
+  bool isUser = true;
+  String? profileType;
 
   double? latitude, longitude;
   LatLng myLocation = const LatLng(23.0225, 72.5714);
@@ -135,6 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
     provider = Provider.of<SantProvider>(context, listen: false);
     locationProvider = Provider.of<LocationProvider>(context, listen: false);
 
+    isUser = widget.isUser ?? true;
+    profileType = widget.profileType;
+
     _initAsync().then((value) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       selectedSamajIds = prefs.getStringList("selectedSamaj") ?? [];
@@ -196,26 +204,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        InkWell(
-                          onTap: () {
+                        IconButton(
+                          onPressed: () {
                             Keys.scaffoldKey.currentState?.openDrawer();
                           },
-                          child: Icon(
-                            Icons.menu,
-                            size: 24,
-                            color: Colors.white,
-                          ),
+                          icon: Icon(Icons.menu, size: 24, color: Colors.white),
                         ),
                         Image.asset(
                           AppLogos.homeLogo,
                           height: 50,
                           color: Colors.white,
                         ),
-                        InkWell(
-                          onTap: () {
+                        IconButton(
+                          onPressed: () {
                             _showFilterDialog();
                           },
-                          child: Icon(
+                          icon: Icon(
                             Icons.filter_alt_outlined,
                             color: Colors.white,
                             size: 24,
@@ -223,6 +227,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    if (widget.isUser == false && widget.profileType != null)
+                      Text(
+                        widget.profileType!.toUpperCase(),
+                        style: AppFonts.outfitBlack.copyWith(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
 
                     SizedBox(height: 35),
 
@@ -258,7 +271,10 @@ class SantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        navigatorPush(context, SantDetailScreen(sant: sant));
+        navigatorPush(
+          context,
+          SantDetailScreen(sant: SantViewData.fromSantList(sant)),
+        );
       },
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 25),
@@ -363,17 +379,14 @@ class SantCard extends StatelessWidget {
                       await provider.getSantList(data: {}, offSet: 0);
                     }
                   } else if (sant.isBookmarked != false) {
-                    toastMessage("Remove Bookmark from Sant Tab");
-                    // bool
-                    // success = await context.read<SantProvider>().removeBookmark(
-                    //   bookmarkId:
-                    //       sant.saintId ?? // TODO: Have to Add bookmark_id for removing sant
-                    //       "",
-                    // );
+                    // toastMessage("Remove Bookmark from Sant Tab");
+                    bool success = await context
+                        .read<SantProvider>()
+                        .removeBookmark(bookmarkId: sant.bookmarkId ?? "");
 
-                    // if (success) {
-                    //   await provider.getSantList();
-                    // }
+                    if (success) {
+                      await provider.getSantList(data: {}, offSet: 0);
+                    }
                   }
                 },
                 icon: Icon(

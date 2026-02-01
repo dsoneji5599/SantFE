@@ -31,18 +31,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     List<String> uids,
   ) async {
     if (uids.isEmpty) return [];
-    final out = <DocumentSnapshot<Map<String, dynamic>>>[];
-    for (var i = 0; i < uids.length; i += 10) {
-      final chunk = uids.sublist(
-        i,
-        i + 10 > uids.length ? uids.length : i + 10,
-      );
-      final futures = chunk.map(
-        (id) => _firestore.collection('users').doc(id).get(),
-      );
-      out.addAll(await Future.wait(futures));
-    }
-    return out;
+
+    final snap = await _firestore
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: uids)
+        .get();
+
+    return snap.docs;
   }
 
   Future<void> _removeMember(String uid) async {
@@ -329,10 +324,41 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
                             final profile = (data?['profileImage'] ?? "")
                                 .toString();
-                            final name = (data?['name'] ?? "Unnamed")
-                                .toString();
-                            final email = (data?['email'] ?? "").toString();
-                            final mobile = (data?['mobile'] ?? "").toString();
+                            final santList = context
+                                .read<SantProvider>()
+                                .santList;
+
+                            final email = (data?['email'] ?? "")
+                                .toString()
+                                .toLowerCase();
+
+                            String phone = (data?['phone'] ?? "").toString();
+                            phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+                            if (phone.length > 10) {
+                              phone = phone.substring(phone.length - 10);
+                            }
+
+                            final matchedSant = santList.firstWhere((s) {
+                              final santEmail = (s.email ?? "").toLowerCase();
+
+                              String santPhone = (s.mobile ?? "");
+                              santPhone = santPhone.replaceAll(
+                                RegExp(r'[^0-9]'),
+                                '',
+                              );
+                              if (santPhone.length > 10) {
+                                santPhone = santPhone.substring(
+                                  santPhone.length - 10,
+                                );
+                              }
+
+                              return (email.isNotEmpty && santEmail == email) ||
+                                  (phone.isNotEmpty && santPhone == phone);
+                            }, orElse: () => SantListModel());
+
+                            final name = matchedSant.name?.isNotEmpty == true
+                                ? matchedSant.name!
+                                : "Unnamed";
 
                             return ListTile(
                               leading: CircleAvatar(
@@ -352,7 +378,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                               subtitle: Text(
                                 adm
                                     ? "Admin"
-                                    : (email.isNotEmpty ? email : mobile),
+                                    : (email.isNotEmpty ? email : phone),
                               ),
                               trailing: isAdmin && !adm
                                   ? IconButton(
