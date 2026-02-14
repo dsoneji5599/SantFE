@@ -39,7 +39,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
       fab: FloatingActionButton(
         backgroundColor: AppColors.appOrange,
         child: const Icon(Icons.add, color: Colors.white, size: 32),
-        onPressed: () => navigatorPush(context, const CreateGroupScreen()),
+        onPressed: () =>
+            navigatorPush(context, const CreateGroupScreen()).then((v) {
+              if (v == true) setState(() {});
+            }),
       ),
       body: Column(
         children: [

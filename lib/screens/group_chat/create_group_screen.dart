@@ -17,7 +17,10 @@ import 'package:sant_app/widgets/app_scaffold.dart';
 import 'package:sant_app/widgets/app_textfield.dart';
 
 class CreateGroupScreen extends StatefulWidget {
-  const CreateGroupScreen({super.key});
+  final String? groupId;
+  final bool isEdit;
+
+  const CreateGroupScreen({super.key, this.groupId, this.isEdit = false});
 
   @override
   State<CreateGroupScreen> createState() => _CreateGroupScreenState();
@@ -39,6 +42,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   void initState() {
     super.initState();
     _fetchUsers();
+    if (widget.isEdit) _loadGroupData();
     _membersController.text = '';
   }
 
@@ -47,6 +51,27 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     _groupNameController.dispose();
     _membersController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadGroupData() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.groupId)
+        .get();
+
+    final data = doc.data();
+    if (data == null) return;
+
+    _groupNameController.text = data['name'] ?? '';
+
+    final members = List<String>.from(data['members'] ?? []);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    members.remove(uid);
+
+    setState(() {
+      _selectedUserIds = members;
+      _membersController.text = _getSelectedUserNamesFromSantList(context);
+    });
   }
 
   Future<void> _fetchUsers() async {
@@ -140,19 +165,28 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         }
       }
 
-      final groupData = {
-        'name': _groupNameController.text.trim(),
-        'imageUrl': imageUrl ?? '',
-        'adminId': currentUser.uid,
-        'members': [..._selectedUserIds, currentUser.uid],
-        'createdAt': FieldValue.serverTimestamp(),
-      };
+      final groups = FirebaseFirestore.instance.collection('groups');
 
-      await FirebaseFirestore.instance.collection('groups').add(groupData);
+      if (widget.isEdit && widget.groupId != null) {
+        await groups.doc(widget.groupId).update({
+          'name': _groupNameController.text.trim(),
+          if (imageUrl != null) 'imageUrl': imageUrl,
+          'members': [..._selectedUserIds, currentUser.uid],
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await groups.add({
+          'name': _groupNameController.text.trim(),
+          'imageUrl': imageUrl ?? '',
+          'adminId': currentUser.uid,
+          'members': [..._selectedUserIds, currentUser.uid],
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       toastMessage('Group created successfully');
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       log(e.toString(), name: "Creating Group");
       toastMessage('Failed to create group, try again later');
@@ -548,7 +582,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   const SizedBox(height: 40),
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : AppButton(text: "Create", onTap: _createGroup),
+                      : AppButton(
+                          text: widget.isEdit ? "Update" : "Create",
+                          onTap: _createGroup,
+                        ),
                 ],
               ),
             ),

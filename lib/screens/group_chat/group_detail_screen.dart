@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sant_app/models/sant_list_model.dart';
 import 'package:sant_app/provider/sant_provider.dart';
+import 'package:sant_app/screens/group_chat/create_group_screen.dart';
 import 'package:sant_app/themes/app_fonts.dart';
+import 'package:sant_app/widgets/app_navigator_animation.dart';
 import 'package:sant_app/widgets/app_scaffold.dart';
 
 class GroupDetailScreen extends StatefulWidget {
@@ -262,6 +264,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                           items: isAdmin
                               ? const [
                                   PopupMenuItem(
+                                    value: "edit",
+                                    child: Text("Edit Group"),
+                                  ),
+                                  PopupMenuItem(
                                     value: "delete",
                                     child: Text("Delete Group"),
                                   ),
@@ -273,6 +279,15 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                                   ),
                                 ],
                         ).then((v) async {
+                          if (v == "edit") {
+                            navigatorPush(
+                              context,
+                              CreateGroupScreen(
+                                groupId: widget.groupId,
+                                isEdit: true,
+                              ),
+                            ).then((_) => setState(() {}));
+                          }
                           if (v == "delete") await _deleteGroup();
                           if (v == "leave") await _leaveGroup();
                         });
@@ -356,9 +371,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                                   (phone.isNotEmpty && santPhone == phone);
                             }, orElse: () => SantListModel());
 
-                            final name = matchedSant.name?.isNotEmpty == true
-                                ? matchedSant.name!
-                                : "Unnamed";
+                            final name = (id == _auth.currentUser?.uid)
+                                ? "You"
+                                : (matchedSant.name?.isNotEmpty == true
+                                      ? matchedSant.name!
+                                      : (data?['name'] ?? "Unnamed"));
 
                             return ListTile(
                               leading: CircleAvatar(

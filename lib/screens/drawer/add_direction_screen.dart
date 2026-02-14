@@ -501,19 +501,21 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                 ),
                                 padding: EdgeInsets.symmetric(horizontal: 10),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Start',
-                                    style: AppFonts.outfitBlack.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 18,
+                              child: FittedBox(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Start',
+                                      style: AppFonts.outfitBlack.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.navigation_outlined, size: 18),
-                                ],
+                                    SizedBox(width: 8),
+                                    Icon(Icons.navigation_outlined, size: 18),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -570,11 +572,13 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              child: Text(
-                                'Rest',
-                                style: AppFonts.outfitBlack.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 18,
+                              child: FittedBox(
+                                child: Text(
+                                  'Rest',
+                                  style: AppFonts.outfitBlack.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
                                 ),
                               ),
                             ),
@@ -635,11 +639,13 @@ class _AddDirectionScreenState extends State<AddDirectionScreen> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              child: Text(
-                                'Stop journey',
-                                style: AppFonts.outfitBlack.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 18,
+                              child: FittedBox(
+                                child: Text(
+                                  'Stop journey',
+                                  style: AppFonts.outfitBlack.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
                                 ),
                               ),
                             ),
