@@ -489,7 +489,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     ),
                   ),
                   Text(
-                    "Create Group",
+                    widget.isEdit ? "Update Group" : "Create Group",
                     style: AppFonts.outfitBlack.copyWith(
                       fontSize: 20,
                       color: Colors.white,
