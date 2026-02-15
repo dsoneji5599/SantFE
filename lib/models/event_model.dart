@@ -1,5 +1,6 @@
 class EventModel {
   final String? eventId;
+  final bool? createdByMe;
   final String? name;
   final DateTime? eventDate;
   final String? description;
@@ -10,6 +11,7 @@ class EventModel {
 
   EventModel({
     this.eventId,
+    this.createdByMe,
     this.name,
     this.eventDate,
     this.description,
@@ -21,6 +23,7 @@ class EventModel {
 
   factory EventModel.fromJson(Map<String, dynamic> json) => EventModel(
     eventId: json["event_id"],
+    createdByMe: json["created_by_me"],
     name: json["name"],
     eventDate: json["event_date"] == null
         ? null

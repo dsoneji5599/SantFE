@@ -216,7 +216,7 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
 
-                  if (!isUser)
+                  if (!isUser && event.createdByMe == true)
                     Positioned(
                       bottom: -30,
                       right: 10,
@@ -311,7 +311,7 @@ class EventCard extends StatelessWidget {
           ),
         ),
 
-        if (!isUser)
+        if (!isUser && event.createdByMe == true)
           Positioned(
             bottom: 0,
             right: 0,
