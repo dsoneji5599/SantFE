@@ -8,6 +8,7 @@ import 'package:sant_app/models/family_model.dart';
 import 'package:sant_app/provider/home_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/themes/app_fonts.dart';
+import 'package:sant_app/utils/extensions.dart';
 import 'package:sant_app/utils/toast_bar.dart';
 import 'package:sant_app/widgets/app_button.dart';
 import 'package:sant_app/widgets/app_dropdown.dart';
@@ -94,10 +95,6 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     if (image != null) setState(() => _pickedImage = image);
   }
 
-  String _formatDate(DateTime date) {
-    return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-  }
-
   bool _hasChildrenDataChanged(List<Map<String, dynamic>> currentData) {
     if (_originalChildrenData == null) return false;
     if (currentData.length != _originalChildrenData!.length) return true;
@@ -132,7 +129,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       _originalName = f.name;
 
       _dobController.text = (f.dob is DateTime)
-          ? _formatDate(f.dob as DateTime)
+          ? (f.dob as DateTime).toDDMMYYYYDash()
           : (f.dob?.toString() ?? '');
       _originalDob = _dobController.text;
 
@@ -158,7 +155,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       _originalSpouseName = f.spouseName;
 
       _dateOfMarriageController.text = (f.dom is DateTime)
-          ? _formatDate(f.dom as DateTime)
+          ? (f.dom as DateTime).toDDMMYYYYDash()
           : (f.dom?.toString() ?? '');
       _originalDom = _dateOfMarriageController.text;
 
@@ -336,8 +333,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 );
                                 if (picked != null) {
                                   _selectedDob = picked;
-                                  _dobController.text =
-                                      '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                                  _dobController.text = picked.toDDMMYYYYDash();
                                 }
                               },
                             ),
@@ -400,8 +396,8 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                 );
                                 if (picked != null) {
                                   _selectedMarriageDate = picked;
-                                  _dateOfMarriageController.text =
-                                      '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                                  _dateOfMarriageController.text = picked
+                                      .toDDMMYYYYDash();
                                 }
                               },
                             ),
@@ -587,8 +583,8 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                         lastDate: DateTime.now(),
                                       );
                                       if (picked != null) {
-                                        child.dob.text =
-                                            '${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}';
+                                        child.dob.text = picked
+                                            .toDDMMYYYYDash();
                                       }
                                     },
                                   ),
