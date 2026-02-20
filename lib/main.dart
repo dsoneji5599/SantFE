@@ -10,6 +10,7 @@ import 'package:sant_app/provider/profile_provider.dart';
 import 'package:sant_app/provider/sant_provider.dart';
 import 'package:sant_app/provider/util_provider.dart';
 import 'package:sant_app/screens/auth/splash_screen.dart';
+import 'package:sant_app/widgets/keys.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => LocationProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: Keys.navigatorKey,
         title: 'Sant App',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(

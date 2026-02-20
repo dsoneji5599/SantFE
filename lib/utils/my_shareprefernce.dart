@@ -17,6 +17,13 @@ class MySharedPreferences {
     return myPrefs.getString(key);
   }
 
+  Future<String?> removeStringValue(String key) async {
+    final myPrefs = await SharedPreferences.getInstance();
+    final value = myPrefs.getString(key);
+    await myPrefs.remove(key);
+    return value;
+  }
+
   setIntegerValue(String key, int value) async {
     SharedPreferences myPrefs = await SharedPreferences.getInstance();
     myPrefs.setInt(key, value);

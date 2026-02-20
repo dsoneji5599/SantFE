@@ -246,22 +246,21 @@ class FamilyCard extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 0,
-              right: 0,
+              bottom: -10,
+              right: -15,
               child: Row(
                 children: [
-                  InkWell(
-                    onTap: () {
+                  IconButton(
+                    onPressed: () {
                       navigatorPush(
                         context,
                         AddFamilyMemberScreen(isEdit: true, family: family),
                       );
                     },
-                    child: Icon(Icons.edit, color: AppColors.appGrey),
+                    icon: Icon(Icons.edit, color: AppColors.appGrey),
                   ),
-                  SizedBox(width: 10),
-                  InkWell(
-                    onTap: () async {
+                  IconButton(
+                    onPressed: () async {
                       final confirm = await showDialog(
                         context: context,
                         builder: (context) {
@@ -291,10 +290,12 @@ class FamilyCard extends StatelessWidget {
                         Provider.of<HomeProvider>(
                           context,
                           listen: false,
-                        ).removeFamilyMember(userFamilyId: family.userId ?? "");
+                        ).removeFamilyMember(
+                          userFamilyId: family.userFamilyId ?? "",
+                        );
                       }
                     },
-                    child: Icon(Icons.delete, color: AppColors.appGrey),
+                    icon: Icon(Icons.delete, color: AppColors.appGrey),
                   ),
                 ],
               ),

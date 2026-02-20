@@ -146,7 +146,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
                     ),
                   ),
                   Text(
-                    widget.isDetail == true ? "Event Details" : "Add Event",
+                    widget.isDetail == true
+                        ? "Event Details"
+                        : widget.isEdit == true
+                        ? "Edit Event"
+                        : "Add Event",
                     style: AppFonts.outfitBlack.copyWith(
                       fontSize: 20,
                       color: Colors.white,

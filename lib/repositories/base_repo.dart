@@ -1,30 +1,87 @@
-//Third Party Imports
+// Third Party Imports
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
+
+// Project Imports
+import 'package:sant_app/repositories/firebase_api.dart';
+import 'package:sant_app/screens/auth/onboarding_screen.dart';
+import 'package:sant_app/utils/app_urls.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/utils/toast_bar.dart';
+import 'package:sant_app/widgets/app_navigator_animation.dart';
+import 'package:sant_app/widgets/keys.dart';
 
 class BaseRepository {
-  /// For POST request
+  static bool _isBlockedHandled = false;
+
+  Future<bool> _checkUserBlocked() async {
+    try {
+      if (_isBlockedHandled) return true;
+
+      final accessToken = await MySharedPreferences.instance.getStringValue(
+        "access_token",
+      );
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return false;
+      }
+
+      final response = await http.get(
+        Uri.parse(ApiUrls.baseUrl + UserAuthUrls.checkUserIsBlocked),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      developer.log(response.body, name: '_checkUserBlocked response');
+
+      if (response.statusCode == 403 || response.body == 'User Blocked') {
+        _isBlockedHandled = true;
+
+        await signOut();
+
+        toastMessage("Your account has been blocked.");
+
+        final context = Keys.navigatorKey.currentContext;
+        if (context != null) {
+          navigatorPushReplacement(context, OnboardingScreen());
+        }
+
+        return true;
+      }
+    } catch (e) {
+      developer.log(e.toString(), name: '_checkUserBlocked error');
+      return false;
+    }
+
+    return false;
+  }
+
+  /// POST
   Future<http.Response> postHttp({
     required Map<String, dynamic> data,
     required String api,
     bool token = false,
   }) async {
+    if (await _checkUserBlocked()) {
+      return http.Response('User Blocked', 403);
+    }
+
     String? accessToken;
-    final url = api;
-    log(url, name: 'postHttp');
-    log(data.toString(), name: '$api data');
+
+    developer.log(api, name: 'postHttp');
+    developer.log(data.toString(), name: '$api data');
+
     if (token) {
       accessToken = await MySharedPreferences.instance.getStringValue(
         "access_token",
       );
-      log(accessToken.toString(), name: "access_token");
     }
 
     final response = await http.post(
-      Uri.parse(url),
+      Uri.parse(api),
       headers: accessToken == null
           ? {'Content-Type': 'application/json'}
           : {
@@ -33,31 +90,38 @@ class BaseRepository {
             },
       body: json.encode(data),
     );
-    log(response.statusCode.toString(), name: "Status Code");
+
+    developer.log(response.statusCode.toString(), name: "Status Code");
+
     if (response.statusCode == 500) {
       toastMessage("Server error, Please try again Later!");
     }
+
     return response;
   }
 
-  /// For GET request
+  /// GET
   Future<http.Response> getHttp({
     required String api,
     bool token = false,
     Map<String, dynamic>? data,
   }) async {
+    if (await _checkUserBlocked()) {
+      return http.Response('User Blocked', 403);
+    }
+
     String? accessToken;
-    final url = api;
-    log(url, name: 'getHttp');
+
+    developer.log(api, name: 'getHttp');
+
     if (token) {
       accessToken = await MySharedPreferences.instance.getStringValue(
         "access_token",
       );
-      log(accessToken.toString(), name: "access_token");
     }
 
     final response = await http.get(
-      Uri.parse(url),
+      Uri.parse(api),
       headers: accessToken == null
           ? {'Content-Type': 'application/json'}
           : {
@@ -65,31 +129,39 @@ class BaseRepository {
               'Authorization': 'Bearer $accessToken',
             },
     );
-    log(response.statusCode.toString(), name: api);
+
+    developer.log(response.statusCode.toString(), name: api);
+
     if (response.statusCode == 500) {
       toastMessage("Server error, Please try again Later!");
     }
+
     return response;
   }
 
-  /// For PUT request
+  /// PUT
   Future<http.Response> putHttp({
     required Map<String, dynamic> data,
     required String api,
     bool token = false,
   }) async {
+    if (await _checkUserBlocked()) {
+      return http.Response('User Blocked', 403);
+    }
+
     String? accessToken;
-    final url = api;
-    log(url, name: 'putHttp');
-    log(data.toString(), name: '$api data');
+
+    developer.log(api, name: 'putHttp');
+    developer.log(data.toString(), name: '$api data');
+
     if (token) {
       accessToken = await MySharedPreferences.instance.getStringValue(
         "access_token",
       );
-      log(accessToken.toString(), name: "access_token");
     }
+
     final response = await http.put(
-      Uri.parse(url),
+      Uri.parse(api),
       headers: accessToken == null
           ? {'Content-Type': 'application/json'}
           : {
@@ -98,30 +170,37 @@ class BaseRepository {
             },
       body: json.encode(data),
     );
-    log(response.statusCode.toString());
+
+    developer.log(response.statusCode.toString());
+
     if (response.statusCode == 500) {
       toastMessage("Server error, Please try again Later!");
     }
+
     return response;
   }
 
-  /// For DELETE request
+  /// DELETE
   Future<http.Response> deleteHttp({
     required String api,
     bool token = false,
   }) async {
+    if (await _checkUserBlocked()) {
+      return http.Response('User Blocked', 403);
+    }
+
     String? accessToken;
-    final url = api;
-    log(url, name: 'deleteHttp');
+
+    developer.log(api, name: 'deleteHttp');
+
     if (token) {
       accessToken = await MySharedPreferences.instance.getStringValue(
         "access_token",
       );
-      log(accessToken.toString(), name: "access_token");
     }
 
     final response = await http.delete(
-      Uri.parse(url),
+      Uri.parse(api),
       headers: accessToken == null
           ? {'Content-Type': 'application/json'}
           : {
@@ -129,13 +208,16 @@ class BaseRepository {
               'Authorization': 'Bearer $accessToken',
             },
     );
-    log(response.toString());
+
+    developer.log(response.toString());
+
     if (response.statusCode == 500) {
       toastMessage("Server error, Please try again Later!");
     }
+
     return response;
   }
-
+}
   // Future<int> refreshToken() async {
   //   String? refreshToken = await MySharedPreferences.instance.getStringValue(
   //     "refresh_token",
@@ -162,4 +244,4 @@ class BaseRepository {
   //   }
   //   return response.statusCode;
   // }
-}
+

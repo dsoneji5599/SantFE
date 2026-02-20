@@ -11,6 +11,8 @@ class UserAuthUrls {
   static String register = 'user/register';
   static String checkUserExist = 'user/is_user_exist';
   static String refreshToken = 'user/refresh_token';
+
+  static String checkUserIsBlocked = 'user/check_block_status';
 }
 
 class SantAuthUrls {

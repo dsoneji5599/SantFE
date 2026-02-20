@@ -2,8 +2,11 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:sant_app/repositories/auth_repo.dart';
+import 'package:sant_app/screens/auth/onboarding_screen.dart';
 import 'package:sant_app/utils/my_shareprefernce.dart';
 import 'package:sant_app/utils/toast_bar.dart';
+import 'package:sant_app/widgets/app_navigator_animation.dart';
+import 'package:sant_app/widgets/keys.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserAuthRepository userAuthRepo = UserAuthRepository();
@@ -131,21 +134,46 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> checkUserExist({String? phone, String? email}) async {
+  Future<bool?> checkUserExist({String? phone, String? email}) async {
     try {
-      final response = await userAuthRepo.checkUserExistApi(
+      final rawResponse = await userAuthRepo.checkUserExistApi(
         phone: phone,
         email: email,
       );
-      final statusCode = int.tryParse(response['status_code'].toString());
+
+      // BLOCKED (string response)
+      if (rawResponse is String &&
+          rawResponse.toLowerCase().contains('blocked')) {
+        toastMessage("Your account has been blocked. Please contact support.");
+
+        final context = Keys.navigatorKey.currentContext;
+        if (context != null) {
+          navigatorPushReplacement(context, OnboardingScreen());
+        }
+
+        return null;
+      }
+
+      final statusCode = int.tryParse(rawResponse['status_code'].toString());
 
       if (statusCode == 200) {
         return true;
       } else {
         return false;
       }
-    } catch (e, s) {
-      log(e.toString(), stackTrace: s, name: "response checkUserExist");
+    } catch (e) {
+      // BLOCKED (exception case)
+      if (e.toString().toLowerCase().contains('blocked')) {
+        toastMessage("Your account has been blocked. Please contact support.");
+
+        final context = Keys.navigatorKey.currentContext;
+        if (context != null) {
+          navigatorPushReplacement(context, OnboardingScreen());
+        }
+
+        return null;
+      }
+
       return false;
     }
   }

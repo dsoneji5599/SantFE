@@ -191,9 +191,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
 
                           if (widget.isUser) {
-                            final isNewUser = !(await context
+                            final result = await context
                                 .read<AuthProvider>()
-                                .checkUserExist(email: value.user?.email));
+                                .checkUserExist(email: value.user?.email);
+
+                            if (result == null) return;
+
+                            final isNewUser = !result;
 
                             if (isNewUser) {
                               navigatorPush(
@@ -207,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                               return;
                             }
-
                             bool loginSuccess = await context
                                 .read<AuthProvider>()
                                 .userLogin(
@@ -380,9 +383,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
 
                             if (widget.isUser) {
-                              final isNewUser = !(await context
+                              final result = await context
                                   .read<AuthProvider>()
-                                  .checkUserExist(email: value.user?.email));
+                                  .checkUserExist(email: value.user?.email);
+
+                              if (result == null) return;
+
+                              final isNewUser = !result;
 
                               if (isNewUser) {
                                 navigatorPush(

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sant_app/models/event_model.dart';
 import 'package:sant_app/provider/home_provider.dart';
 import 'package:sant_app/screens/home/add_event_screen.dart';
+import 'package:sant_app/themes/app_colors.dart';
 import 'package:sant_app/themes/app_fonts.dart';
 import 'package:sant_app/themes/app_images.dart';
 import 'package:sant_app/utils/extensions.dart';
@@ -179,8 +180,7 @@ class EventCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
+              Column(
                 children: [
                   InkWell(
                     onTap: () {
@@ -215,39 +215,71 @@ class EventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   if (!isUser && event.createdByMe == true)
-                    Positioned(
-                      bottom: -30,
-                      right: 10,
-                      left: 10,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          textStyle: TextStyle(fontSize: 12),
-                          backgroundColor: Colors.white,
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            log("Edit button clicked");
+                            navigatorPush(
+                              context,
+                              AddEventScreen(
+                                description: event.description,
+                                eventDate: event.eventDate
+                                    ?.toDDMMYYYY()
+                                    .toString(),
+                                eventName: event.name,
+                                imagePath: event.imagePath,
+                                isDetail: false,
+                                isEdit: true,
+                                eventId: event.eventId ?? "N/A",
+                                latitude: event.lat,
+                                longitude: event.long,
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.edit, color: AppColors.appGrey),
                         ),
-                        onPressed: () {
-                          log("Edit button clicked");
-                          navigatorPush(
-                            context,
-                            AddEventScreen(
-                              description: event.description,
-                              eventDate: event.eventDate
-                                  ?.toDDMMYYYY()
-                                  .toString(),
-                              eventName: event.name,
-                              imagePath: event.imagePath,
-                              isDetail: false,
-                              isEdit: true,
-                              eventId: event.eventId ?? "N/A",
-                              latitude: event.lat,
-                              longitude: event.long,
-                            ),
-                          );
-                        },
-                        child: Text("Edit", style: AppFonts.outfitBlack),
-                      ),
+                        IconButton(
+                          onPressed: () async {
+                            final confirm = await showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text("Delete Event"),
+                                  content: Text(
+                                    "Are you sure you want to delete this event?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context, false);
+                                      },
+                                      child: Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context, true);
+                                      },
+                                      child: Text("Delete"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirm == true) {
+                              await context.read<HomeProvider>().deleteEvent(
+                                eventId: event.eventId ?? "",
+                              );
+                            }
+                          },
+                          icon: Icon(
+                            Icons.delete_forever_outlined,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -292,16 +324,17 @@ class EventCard extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 8),
-                      Text(
-                        event.description ??
-                            'Satya narayan katch sanje 4 vage chalu tahse ane sathe rate jamva nu pn ...',
-                        style: AppFonts.outfitBlack.copyWith(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          height: 1.3,
+                      SizedBox(
+                        child: Text(
+                          event.description ?? 'N/A',
+                          style: AppFonts.outfitBlack.copyWith(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            height: 1.3,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -310,48 +343,6 @@ class EventCard extends StatelessWidget {
             ],
           ),
         ),
-
-        if (!isUser && event.createdByMe == true)
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: IconButton(
-              onPressed: () async {
-                final confirm = await showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text("Delete Event"),
-                      content: Text(
-                        "Are you sure you want to delete this event?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, false);
-                          },
-                          child: Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context, true);
-                          },
-                          child: Text("Delete"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirm == true) {
-                  await context.read<HomeProvider>().deleteEvent(
-                    eventId: event.eventId ?? "",
-                  );
-                }
-              },
-              icon: Icon(Icons.delete_forever_outlined, color: Colors.red),
-            ),
-          ),
       ],
     );
   }

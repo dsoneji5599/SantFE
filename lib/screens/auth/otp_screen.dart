@@ -328,11 +328,15 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     if (user != null) {
                       if (widget.isUser) {
-                        final isNewUser = !(await context
+                        final result = await context
                             .read<AuthProvider>()
                             .checkUserExist(
                               phone: _cleanPhone(user.user?.phoneNumber),
-                            ));
+                            );
+
+                        if (result == null) return;
+
+                        final isNewUser = !result;
 
                         if (isNewUser) {
                           navigatorPush(
