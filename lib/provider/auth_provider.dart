@@ -69,6 +69,12 @@ class AuthProvider extends ChangeNotifier {
 
         await getToken();
         return true;
+      } else if (statusCode == 404) {
+        toastMessage(
+          'User is already Exist, Please login with goolge instead',
+          isSuccess: false,
+        );
+        return false;
       } else if (statusCode == 403) {
         toastMessage(
           response['message'] ?? 'User is blocked',
@@ -141,7 +147,6 @@ class AuthProvider extends ChangeNotifier {
         email: email,
       );
 
-      // BLOCKED (string response)
       if (rawResponse is String &&
           rawResponse.toLowerCase().contains('blocked')) {
         toastMessage("Your account has been blocked. Please contact support.");
@@ -154,16 +159,7 @@ class AuthProvider extends ChangeNotifier {
         return null;
       }
 
-      final statusCode = int.tryParse(rawResponse['status_code'].toString());
-
-      if (statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      // BLOCKED (exception case)
-      if (e.toString().toLowerCase().contains('blocked')) {
+      if (rawResponse is! Map) {
         toastMessage("Your account has been blocked. Please contact support.");
 
         final context = Keys.navigatorKey.currentContext;
@@ -174,7 +170,18 @@ class AuthProvider extends ChangeNotifier {
         return null;
       }
 
-      return false;
+      final statusCode = int.tryParse(rawResponse['status_code'].toString());
+
+      return statusCode == 200;
+    } catch (e) {
+      toastMessage("Your account has been blocked. Please contact support.");
+
+      final context = Keys.navigatorKey.currentContext;
+      if (context != null) {
+        navigatorPushReplacement(context, OnboardingScreen());
+      }
+
+      return null;
     }
   }
 

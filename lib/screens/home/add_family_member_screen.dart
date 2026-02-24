@@ -615,7 +615,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        "Add Family Member",
+                                        "Add Children",
                                         style: AppFonts.outfitBlack.copyWith(
                                           fontSize: 16,
                                         ),

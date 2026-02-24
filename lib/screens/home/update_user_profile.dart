@@ -151,6 +151,7 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
       if (selectedCity != null) {
         await utilProvider.getDistrict(cityId: selectedCity!);
       }
+      setState(() {});
 
       _validateDropdownValues();
 
@@ -159,6 +160,42 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
   }
 
   void _validateDropdownValues() {
+    final countryIds = utilProvider.countryList
+        .where((c) => c.countryId != null)
+        .map((c) => c.countryId)
+        .toList();
+
+    if (selectedCountry != null && !countryIds.contains(selectedCountry)) {
+      selectedCountry = null;
+    }
+
+    final stateIds = utilProvider.stateList
+        .where((s) => s.stateId != null)
+        .map((s) => s.stateId)
+        .toList();
+
+    if (selectedState != null && !stateIds.contains(selectedState)) {
+      selectedState = null;
+    }
+
+    final cityIds = utilProvider.cityList
+        .where((c) => c.cityId != null)
+        .map((c) => c.cityId)
+        .toList();
+
+    if (selectedCity != null && !cityIds.contains(selectedCity)) {
+      selectedCity = null;
+    }
+
+    final districtIds = utilProvider.districtList
+        .where((d) => d.districtId != null)
+        .map((d) => d.districtId)
+        .toList();
+
+    if (selectedDistrict != null && !districtIds.contains(selectedDistrict)) {
+      selectedDistrict = null;
+    }
+
     // Validate samaj selection
     final samajIds = utilProvider.samajList
         .where((samaj) => samaj.samajId != null)
@@ -327,6 +364,100 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                       hintText: 'Enter your Salutation',
                     ),
 
+                  if (widget.isUser)
+                    AppDropdown<String>(
+                      value: selectedCountry,
+                      label: "Country",
+                      hintText: 'Select your Country',
+                      isRequired: false,
+                      items: utilProvider.countryList.map((country) {
+                        return DropdownMenuItem<String>(
+                          value: country.countryId,
+                          child: Text(country.country ?? ''),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) async {
+                        setState(() {
+                          selectedCountry = newValue;
+                          selectedState = null;
+                          selectedCity = null;
+                          selectedDistrict = null;
+                        });
+                        if (newValue != null) {
+                          await utilProvider.getState(countryId: newValue);
+                          setState(() {});
+                        }
+                      },
+                    ),
+
+                  if (widget.isUser)
+                    AppDropdown<String>(
+                      value: selectedState,
+                      label: "State",
+                      hintText: 'Select your State',
+                      isRequired: false,
+                      items: utilProvider.stateList.map((state) {
+                        return DropdownMenuItem<String>(
+                          value: state.stateId,
+                          child: Text(state.state ?? ''),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) async {
+                        setState(() {
+                          selectedState = newValue;
+                          selectedCity = null;
+                          selectedDistrict = null;
+                        });
+                        if (newValue != null) {
+                          await utilProvider.getCity(stateId: newValue);
+                          setState(() {});
+                        }
+                      },
+                    ),
+
+                  if (widget.isUser)
+                    AppDropdown<String>(
+                      value: selectedCity,
+                      label: "City",
+                      hintText: 'Select your City',
+                      isRequired: false,
+                      items: utilProvider.cityList.map((city) {
+                        return DropdownMenuItem<String>(
+                          value: city.cityId,
+                          child: Text(city.city ?? ''),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) async {
+                        setState(() {
+                          selectedCity = newValue;
+                          selectedDistrict = null;
+                        });
+                        if (newValue != null) {
+                          await utilProvider.getDistrict(cityId: newValue);
+                          setState(() {});
+                        }
+                      },
+                    ),
+
+                  if (widget.isUser)
+                    AppDropdown<String>(
+                      value: selectedDistrict,
+                      label: "District",
+                      hintText: 'Select your District',
+                      isRequired: false,
+                      items: utilProvider.districtList.map((district) {
+                        return DropdownMenuItem<String>(
+                          value: district.districtId,
+                          child: Text(district.district ?? ''),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedDistrict = newValue;
+                        });
+                      },
+                    ),
+
                   AppDropdown<String>(
                     value:
                         utilProvider.samajList
@@ -485,12 +616,13 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                               "email": _emailController.text,
                               "name": _nameController.text,
                               "dob": formattedDob,
-                              "profile_image": base64Image,
                               "samaj": selectedSamaj,
                               "district": selectedDistrict,
                               "city": selectedCity,
                               "state": selectedState,
                               "country": selectedCountry,
+                              if (base64Image != null)
+                                "profile_image": base64Image,
                             };
 
                             bool updateSuccess = await userProvider
@@ -505,7 +637,6 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                               "email": _emailController.text,
                               "name": _nameController.text,
                               "dob": formattedDob,
-                              "profile_image": base64Image,
                               "samaj": selectedSamaj,
                               "district": selectedDistrict,
                               "city": selectedCity,
@@ -522,6 +653,8 @@ class _UpdateUserProfileScreenState extends State<UpdateUserProfileScreen> {
                               "knowledge_details":
                                   _knowledgeDetailController.text,
                               "vihar_details": _viharDetailController.text,
+                              if (base64Image != null)
+                                "profile_image": base64Image,
                             };
 
                             bool updateSuccess = await santProvider

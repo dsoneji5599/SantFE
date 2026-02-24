@@ -185,7 +185,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       image: AppIcons.date,
                                       key: "Date of Birth",
                                       value:
-                                          value?.dob?.toYYYYMMDD().toString() ??
+                                          value?.dob?.toDDMMYYYY().toString() ??
                                           "N/A",
                                     ),
 
